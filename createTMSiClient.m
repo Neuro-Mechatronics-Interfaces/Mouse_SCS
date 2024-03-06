@@ -13,6 +13,7 @@ arguments
     options.Month (1,1) double = month(today); % Numeric month part of date
     options.Day (1,1) double = day(today); % Numeric day part of date
     options.Block (1,1) double = 0; % Recording block index.
+    options.Sweep (1,1) double = 0; % Recording sweep index.
     options.Host (1,1) string = "192.168.88.100"; % Address of TMSi HOST machine
     options.PortControl (1,1) double = 3030; % UDP port for controlling SAGA acquisition state machine. 
     options.PortName (1,1) double = 3031; % UDP port for setting SAGA recording file name(s). 
@@ -25,11 +26,13 @@ client.UserData.saga.address = options.Host;
 client.UserData.saga.port = struct(...
     'control', options.PortControl, ...
     'name', options.PortName, ...
-    'parameter', options.PortParameter);
+    'parameter', options.PortParameters);
 client.UserData.block = options.Block;
+client.UserData.sweep = options.Sweep;
 client.UserData.subject = options.Subject;
 client.UserData.year = options.Year;
 client.UserData.month = options.Month;
 client.UserData.day = options.Day;
+client.UserData.recording = false;
 
 end
