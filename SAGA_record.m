@@ -4,11 +4,12 @@ function SAGA_record(client, logger, options)
 arguments
     client % udpport object (connection to SAGA state machine)
     logger % mlog.Logger object
-    options.SagaCommandPauseDuration (1,1) double {mustBePositive} = 0.05; % seconds
+    options.SagaCommandPauseDuration (1,1) double {mustBePositive} = 0.5; % seconds
     options.Tag {mustBeTextScalar} = 'STIM';
     options.Block {mustBeInteger} = [];
     options.Intan = [];
     options.Timer = [];
+
 end
 
 writeline(client, 'run', client.UserData.saga.address, client.UserData.saga.port.control);
@@ -17,7 +18,7 @@ pause(options.SagaCommandPauseDuration);
 if ~isempty(options.Block)
     client.UserData.block = options.Block;
     fprintf(1,'Set `block` to %d.\n', client.UserData.block);
-    logger.log(sprintf('Block = %d', client.UserData.block));
+    logger.info(sprintf('Block = %d', client.UserData.block));
 end
 SAGA_updateFileNames(client, logger, 'Intan', options.Intan, 'Tag', options.Tag);
 if ~isempty(options.Intan)
@@ -29,6 +30,7 @@ if ~isempty(options.Intan)
 end
 pause(options.SagaCommandPauseDuration);
 writeline(client, 'rec', client.UserData.saga.address, client.UserData.saga.port.control);
+pause(1.5);
 fprintf(1,'Recording EMG for <strong>Block=%d</strong>\n', client.UserData.block);
 logger.info(sprintf('Started SAGA recording (Block=%d)', client.UserData.block));
 

@@ -33,23 +33,8 @@ end
 logger = mlog.Logger(options.Subject);
 fprintf(1,'Setting up tcpclient to %s...', options.AddressAM4100);
 
-% 2. Define the AM4100 device connection
-am4100=tcpclient(options.AddressAM4100, options.PortAM4100); %port 23
-fprintf(1,'complete.\n');
-am4100.UserData.subject = options.Subject;
-am4100.UserData.year = options.Year;
-am4100.UserData.month = options.Month;
-am4100.UserData.day = options.Day;
-am4100.UserData.recording_duration = 20; % Seconds (default stim parameters)
-if options.UseIntan
-    fprintf(1,'Attempting to connect to INTAN...')
-    am4100.UserData.intan = tcpclient(options.AddressIntan, options.PortIntan);
-    fprintf(1,'complete.\n');
-else
-    am4100.UserData.intan = [];
-end
 
-% 3. Define the TMSi SAGA UDP state machine connection
+% 2. Define the TMSi SAGA UDP state machine connection
 client = createTMSiClient('Subject', options.Subject, ...
     'Year', options.Year, 'Month', options.Month, 'Day', options.Day, ...
     'Block', options.Block, 'Host', options.Host, 'PortControl', options.PortControl, ...
@@ -58,31 +43,13 @@ client = createTMSiClient('Subject', options.Subject, ...
 SAGA_setBufferSize(client, options.BufferSamples, 'samples');
 SAGA_updateFileNames(client, logger);
 
-% 4. Do initial configuration of AM4100
-logger.info(strtrim(char(read(am4100))));   % empties buffer
+% 3. Do initial configuration of AM4100
+am4100 = initAM4100(client, logger, ...
+    'AddressAM4100', options.AddressAM4100, ...
+    'AddressIntan', options.AddressIntan, ...
+    'PortAM4100', options.PortAM4100, ...
+    'PortIntan', options.PortIntan, ...
+    'UseIntan', options.UseIntan);
 
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s a stop');
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-
-sndStr='get rev';
-write(am4100,uint8(sprintf('%s\r',sndStr)));
-logger.info(sprintf('Send= %s \n',sndStr));  %display send strring
-pause(0.01); % and give it a bit of time to reply
-rplStr=read(am4100,am4100.BytesAvailable,'string');
-logger.info(sprintf('Reply= %s \n', rplStr));  %display reply
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'get active');
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'g n');
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'g r');
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-
-am4100.UserData.timer = timer(...
-    'TimerFcn', @(~,~)SAGA_stop(client, logger, 'Intan', am4100.UserData.intan), ...
-    'StartDelay', am4100.UserData.recording_duration); % Change StartDelay to modify the recording duration without a blocking loop...
 
 end
