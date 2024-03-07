@@ -1,5 +1,5 @@
 function SAGA_impedances(client, logger)
-%IMPEDANCES  Measure impedances on HD-EMG array(s)
+%SAGA_IMPEDANCES  Measure impedances on HD-EMG array(s)
 %
 % Syntax:
 %   SAGA_impedances(client, logger);

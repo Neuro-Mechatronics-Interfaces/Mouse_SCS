@@ -1,4 +1,4 @@
-%EXAMPLE_MAX_2024_03_05  Script for testing/setup prior to experiment
+%TEST_MAX_2024_03_05  Script for testing/setup prior to experiment
 clear;
 clc;
 

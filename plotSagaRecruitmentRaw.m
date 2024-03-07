@@ -1,4 +1,5 @@
-function fig = plot_saga_recruitment_raw(T, saga, channel, options)
+function fig = plotSagaRecruitmentRaw(T, saga, channel, options)
+%PLOTSAGARECRUITMENTRAW  Plot recruitment for individual SAGA channel data
 
 arguments
     T

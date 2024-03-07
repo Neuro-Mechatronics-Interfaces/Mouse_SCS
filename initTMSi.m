@@ -1,11 +1,11 @@
-function client = createTMSiClient(options)
-%CREATETMSICLIENT Create UDP client to control SAGA state machine running on some host device over IPv4 + UDP.
+function client = initTMSi(options)
+%INITTMSI Create UDP client to control SAGA state machine running on some host device over IPv4 + UDP.
 %
 % This function assumes you have already started the "2TMSi_SAGA_MATLAB"
 % script to run the state machine for both TMSi SAGA devices. 
 %
 % Syntax:
-%   client = createTMSiClient('Name', value, ...);
+%   client = initTMSi('Name', value, ...);
 
 arguments
     options.Subject (1,1) string = "Default"; % Name of subject to record

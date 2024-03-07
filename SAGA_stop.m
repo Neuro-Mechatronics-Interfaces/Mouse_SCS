@@ -1,5 +1,5 @@
 function SAGA_stop(client, logger, options)
-%STOP  Stop the current recording/running SAGA state
+%SAGA_STOP  Stop the current recording/running SAGA state
 %
 % Syntax:
 %   SAGA_stop(client, logger);

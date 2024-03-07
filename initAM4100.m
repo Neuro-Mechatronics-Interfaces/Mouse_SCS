@@ -1,4 +1,25 @@
 function am4100 = initAM4100(client, logger, options)
+%INITAM4100 Initialize TCP interface to AM4100.
+%
+% Syntax:
+%   am4100 = initAM4100(client, logger, 'Name', value, ...);
+%
+% Inputs
+%     client TMSi udpport client object
+%     logger mlog.Logger logging object.
+%
+% Options:
+%     AddressAM4100 = "192.168.88.150";
+%     PortAM4100 = 23;
+%     AddressIntan = "192.168.88.100";
+%     PortIntan = 5000;
+%     UseIntan = true;
+% 
+% Output:
+%   am4100 - tcpclient to the AM4100 device, with pre-populated UserData
+%               fields.
+%
+% See also: Contents, initInterfaces
 
 arguments
     client

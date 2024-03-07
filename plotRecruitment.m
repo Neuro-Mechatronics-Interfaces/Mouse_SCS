@@ -1,4 +1,5 @@
 function fig = plotRecruitment(T, data, options)
+%PLOTRECRUITMENT Plot recruitment summary figure
 
 arguments
     T (:,3) table % Table with sweep metadata from loadData.

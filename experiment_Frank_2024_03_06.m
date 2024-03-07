@@ -1,4 +1,4 @@
-%EXPERIMENT_FRANK_2024_03_05  Script for testing/setup prior to experiment
+%EXPERIMENT_FRANK_2024_03_06  Script for testing/setup prior to experiment
 clear;
 clc;
 

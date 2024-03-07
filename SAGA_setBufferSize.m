@@ -1,9 +1,9 @@
-function setBufferSize(client, sz, mode,options)
-%SETBUFFERSIZE Updates tmsi client recording buffer samples for the next record.
+function SAGA_setBufferSize(client, sz, mode,options)
+%SAGA_SETBUFFERSIZE Updates tmsi client recording buffer samples for the next record.
 %
 % Syntax:
-%   setBufferSize(client, sz);
-%   setBufferSize(client, sz, mode);
+%   SAGA_setBufferSize(client, sz);
+%   SAGA_setBufferSize(client, sz, mode);
 %
 % Inputs:
 %     client - The UDPport object acting as client
