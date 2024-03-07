@@ -20,8 +20,8 @@ function varargout = parameters(varargin)
 
 pars = struct;
 % % % Trying to pull the "relevant" ones to the top ... % % %
-pars.generated_data_folder = 'C:/Data/generated_data'; % Setting this to human or primate, temporary hard code
-pars.raw_data_folder_root = 'C:/Data/raw_data';
+pars.generated_data_folder = '\\192.168.88.100\Data\generated_data'; % Setting this to human or primate, temporary hard code
+pars.raw_data_folder_root = '\\192.168.88.100\Data\raw_data';
 
 N = numel(varargin);
 if nargout == 1

@@ -4,3 +4,4 @@
 *.ai
 *.fig
 parameters.m
+logs/

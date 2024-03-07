@@ -11,6 +11,7 @@ arguments
     T  (1,1) double {mustBeGreaterThanOrEqual(T, 0)} = 1.5; % Period between stim events (time between single-pulse stimuli); seconds
     N  (1,1) double {mustBeInteger, mustBePositive} = 10;
     options.InterPhaseInterval (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(options.InterPhaseInterval, 0)} = 50; % Microseconds between phases
+    options.TBuffer (1,1) double = 10;
 end
 
 if sign(A2) == sign(A1)
@@ -37,7 +38,7 @@ logger.info(sprintf('sent = %s', inputStr));
 logger.info(sprintf('reply = %s', rplStr));
 
 % % % Set the number of pulses etc. % % %
-AM4100_setStimEventPeriodAndCount(am4100, logger, T, N, 10);
+AM4100_setStimEventPeriodAndCount(am4100, logger, T, N, options.TBuffer);
 
 % % % Configure the Event parameters % % %
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 2'); % set menu=Library1:Type:Asymm
