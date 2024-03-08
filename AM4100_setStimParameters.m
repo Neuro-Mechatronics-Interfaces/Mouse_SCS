@@ -1,4 +1,4 @@
-function AM4100_setStimParameters(am4100, logger, A1, D1, A2, D2, T, N, options)
+function AM4100_setStimParameters(am4100, logger, A1, D1, A2, D2, options)
 %AM4100_SETSTIMPARAMETERS Set the stimulation parameters for AM4100 experiment
 
 arguments
@@ -8,10 +8,11 @@ arguments
     D1 (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(D1,0)} = 200  % Duration (micro-seconds) for phase 1
     A2 (1,1) double {mustBeInteger} = -1000 % Amplitude (micro-amperes) for phase 2
     D2 (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(D2,0)} = 200  % Duration (micro-seconds) for phase 2
-    T  (1,1) double {mustBeGreaterThanOrEqual(T, 0)} = 1.5; % Period between stim events (time between single-pulse stimuli); seconds
-    N  (1,1) double {mustBeInteger, mustBePositive} = 10;
+    options.PulsePeriod  (1,1) double {mustBeGreaterThanOrEqual(options.PulsePeriod, 0)} = 1.5; % Period between stim events (time between single-pulse stimuli); seconds
+    options.PulsesPerBurst  (1,1) double {mustBeInteger, mustBePositive} = 10;
     options.InterPhaseInterval (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(options.InterPhaseInterval, 0)} = 50; % Microseconds between phases
-    options.TBuffer (1,1) double = 10;
+    options.PostBurstBuffer (1,1) double = 2.5;
+    options.NBursts (1,1) double {mustBeInteger, mustBePositive} = 1;
 end
 
 if sign(A2) == sign(A1)
@@ -43,13 +44,17 @@ if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
     logger.info(sprintf('reply = %s', rplStr));
 end
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 7 4 1'); % set menu=Train:Number=1
+[rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 7 4 %d', options.NBursts)); % set menu=Train:Number=1
 if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
     logger.info(sprintf('reply = %s', rplStr));
 end
 % % % Set the number of pulses etc. % % %
-AM4100_setStimEventPeriodAndCount(am4100, logger, T, N, options.TBuffer);
+AM4100_setStimEventPeriodAndCount(am4100, logger, ...
+    'PulsePeriod', options.PulsePeriod,  ...
+    'PulsesPerBurst', options.PulsesPerBurst, ...
+    'PostBurstBuffer', options.PostBurstBuffer, ...
+    'NBursts', options.NBursts);
 
 % % % Configure the Event parameters % % %
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 2'); % set menu=Library1:Type:Asymm

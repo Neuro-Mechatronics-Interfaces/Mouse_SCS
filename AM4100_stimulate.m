@@ -4,10 +4,11 @@ arguments
     am4100
     logger
     client
-    options.SagaCommandPauseDuration (1,1) double {mustBePositive} = 0.05; % seconds
+    options.DelayAfterRunCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRunCommand, 0)} = 0.025;
+    options.DelayAfterNameCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterNameCommand, 0)} = 0.025; 
+    options.DelayAfterRecCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRecCommand, 0)} = 0.1; 
     options.Tag {mustBeTextScalar} = 'STIM';
     options.StartRecording (1,1) logical = true;
-    options.Block {mustBeInteger} = [];
 end
 
 if options.StartRecording
@@ -16,23 +17,23 @@ if options.StartRecording
     end
     if ~isempty(client)
         SAGA_record(client, logger, ...
-            'SagaCommandPauseDuration', options.SagaCommandPauseDuration, ...
+            'DelayAfterRunCommand', options.DelayAfterRunCommand, ...
+            'DelayAfterNameCommand', options.DelayAfterNameCommand, ...
+            'DelayAfterRecCommand', options.DelayAfterRecCommand, ...
             'Tag', options.Tag, ...
-            'Block', options.Block, ...
+            'Block', client.UserData.block, ...
             'Intan', am4100.UserData.intan, ...
             'Timer', am4100.UserData.timer);
     end
     if ~isempty(logger)
         logger.info('Begin Stimulation');
     end
-    pause(options.SagaCommandPauseDuration);
 end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s t one');  % set the trigger to free run
 if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
     logger.info(sprintf('reply = %s', rplStr));
 end
-pause(options.SagaCommandPauseDuration);
 if ~isempty(am4100.UserData.timer)
     start(am4100.UserData.timer);
 end
