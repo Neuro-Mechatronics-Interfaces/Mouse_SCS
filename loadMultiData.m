@@ -11,6 +11,8 @@ arguments
     DD (1,1) double {mustBeInteger, mustBePositive}
     SWEEPS (1,:) double {mustBeInteger, mustBeGreaterThanOrEqual(SWEEPS, 0)}
     options.LoadIntan (1,1) logical = false;
+    options.LoadSAGA (1,1) logical = true;
+    options.LoadSpreadsheet (1,1) logical = true;
     options.SAGA (1,:) string = ["A", "B"];
     options.SAGA_Tag {mustBeTextScalar} = "STIM";
     options.RawDataRoot {mustBeTextScalar} = "";
@@ -22,12 +24,13 @@ intan = [];
 T = [];
 N = numel(SWEEPS);
 if options.Verbose
-    fprintf(1,'Loading %d sweeps...%03d%%\n', N);
+    fprintf(1,'Loading %d sweeps...%03d%%\n', N, 0);
 end
 for ii = 1:N
     [saga_tmp, intan_tmp, T_tmp] = loadData(SUBJ, YYYY, MM, DD, SWEEPS(ii), ...
         'SAGA', options.SAGA, 'SAGA_Tag', options.SAGA_Tag, ...
         'RawDataRoot', options.RawDataRoot, 'LoadIntan', options.LoadIntan, ...
+        'LoadSAGA', options.LoadSAGA, 'LoadSpreadsheet', options.LoadSpreadsheet, ...
         'Verbose', false);
     saga = [saga; saga_tmp]; %#ok<*AGROW> 
     intan = [intan; intan_tmp];
