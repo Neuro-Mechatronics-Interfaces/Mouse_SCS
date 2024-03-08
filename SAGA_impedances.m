@@ -3,6 +3,8 @@ function SAGA_impedances(client, logger)
 %
 % Syntax:
 %   SAGA_impedances(client, logger);
-logger.info(sprintf('Measured Impedances (Block = %d)', client.UserData.block));
+if ~isempty(logger)
+    logger.info(sprintf('Measured Impedances (Block = %d)', client.UserData.block));
+end
 writeline(client, 'imp', client.UserData.saga.address, client.UserData.saga.port.control);
 end

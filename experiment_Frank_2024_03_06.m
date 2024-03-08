@@ -10,17 +10,20 @@ SAGA_impedances(client, logger);
 keyboard;
 
 %% 3. Run stimulation/recording sweep
-freq = 40;
-amp = -700;
-for ii = 1:10
-    pulse_period = 1/freq;
-    pulse_reps = round(0.5 / pulse_period); 
-    runStimRecSweep(client, am4100, logger, amp, 'InterPulsePeriod', pulse_period, 'PulseRepetitions', pulse_reps, 'MinIntensity', abs(amp));
+for freq = [40,80,160]
+    for amp = 500:50:600
+        for ii = 1:10
+            fprintf(1,'%d) Freq: %d Hz - Amp: %d uA\n', ii, freq, amp);
+            pulse_period = 1/freq;
+            pulse_reps = round(0.5 / pulse_period); 
+            runStimRecSweep(client, am4100, logger, amp, 'InterPulsePeriod', pulse_period, 'PulseRepetitions', pulse_reps, 'MinIntensity', abs(amp));
+        end
+    end
 end
 beep();
 disp('Done');
 
-% T = runStimRecSweep(client, am4100, logger, -1000, 'InterPulsePeriod', 1, 'PulseRepetitions', 10, 'MinIntensity',500, 'IntensityStep', 50);
+% T = runStimRecSweep(client, am4100, logger, -800, 'InterPulsePeriod', 1, 'PulseRepetitions', 10, 'MinIntensity',500, 'IntensityStep', 100);
 % disp(T);
 
 %% 4. 

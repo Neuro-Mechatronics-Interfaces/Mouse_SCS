@@ -8,7 +8,9 @@ arguments
 end
 
 [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 11 8 %d', D_interphase)); % set menu=Library1:Interphase:50us
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 
 end

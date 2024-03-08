@@ -25,7 +25,7 @@ if contains(rplyStr,'*')
     rplyStr=rplyStr(1:strfind(rplyStr,'*'));
 end
 if(contains(rplyStr,'Bad','IgnoreCase',true) || contains(rplyStr,'?','IgnoreCase',true) )
-    fprintf(2,'  %i Reply= %s \n', c,rplyStr);  %display reply
+    fprintf(2,'  %i Reply= ERROR: %s \n', c,rplyStr);  %display reply
 else
     fprintf('  %i Reply= %s \n', c,rplyStr);  %display reply
 end

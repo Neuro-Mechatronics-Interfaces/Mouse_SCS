@@ -18,52 +18,74 @@ if sign(A2) == sign(A1)
     A2 = -A2; % Flip sign if both signs are the same. 
 end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s a stop');
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 0 0 1'); % set menu=General:Mode:Internal Current
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 0 1 6'); % set menu=General:Monitor:1mA/V
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 4 0 1'); % set menu=UniformEvent:Library:1
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 7 0'); % set menu=Train:Type=Uniform
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 7 4 1'); % set menu=Train:Number=1
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 % % % Set the number of pulses etc. % % %
 AM4100_setStimEventPeriodAndCount(am4100, logger, T, N, options.TBuffer);
 
 % % % Configure the Event parameters % % %
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 2'); % set menu=Library1:Type:Asymm
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 
 [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 6 %d', D1)); % set menu=Library1:Duration1: 0.2ms
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 
 AM4100_setInterPhaseInterval(am4100, logger, options.InterPhaseInterval); % 50-microsecond inter-phase interval
 
 [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 9 %d', D2)); % set menu=Library1:Dur2:0.8 ms
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 7 %d', A1)); % set menu=Library1:Amplitude1 1mA
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 10 %d', A2)); % set menu=Library1:Amplitude2 -250uA
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
-
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 % % % Set the stimulator ready to run % % %
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s a run');    % When you are done changing values RUN
-logger.info(sprintf('sent = %s', inputStr));
-logger.info(sprintf('reply = %s', rplStr));
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 
 end
