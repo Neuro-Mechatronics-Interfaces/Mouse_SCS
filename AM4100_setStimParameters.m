@@ -34,6 +34,11 @@ if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
     logger.info(sprintf('reply = %s', rplStr));
 end
+[rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 1 1 6'); % set menu=Configuration:Sync1:6=EvntTotalDur
+if ~isempty(logger)
+    logger.info(sprintf('sent = %s', inputStr));
+    logger.info(sprintf('reply = %s', rplStr));
+end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 4 0 1'); % set menu=UniformEvent:Library:1
 if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
