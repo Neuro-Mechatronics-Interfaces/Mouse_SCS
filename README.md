@@ -1,4 +1,4 @@
-# NHP_ACUTE_SCS #  
+# MOUSE_SCS #  
 Should really be NHP_ACUTE_DRGS but who keeps track?  
 
 ## Contents ##  
@@ -15,7 +15,7 @@ Should really be NHP_ACUTE_DRGS but who keeps track?
  + [`parameters`](parameters.m) - Return parameters struct, which sets default values for things like epoch durations etc.  
 
 ### Experiment Scripts ###  
- + [`experiment_Frank_2024_03_06`](experiment_Frank_2024_03_06.m) - Script for testing/setup prior to experiment.  
+ + [`example_run_experiment`](example_run_experiment.m) - Script for testing/setup prior to experiment.  
 
 ### Main Experiment Functions ###  
  + [`runStimRecSweep`](runStimRecSweep.m) - Returns a table of the stim/rec sweep intensity and block indices.  
