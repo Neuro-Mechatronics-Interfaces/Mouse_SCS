@@ -1,9 +1,9 @@
-%EXPERIMENT_FRANK_2024_03_06  Script for testing/setup prior to experiment
+%EXAMPLE_RUN_EXPERIMENT  Script for testing/setup prior to experiment
 clear;
 clc;
 
 %% 1. Create all connections/logging
-[client, am4100, logger] = initInterfaces('Subject', 'Frank', 'Sweep', 4);
+[client, am4100, logger] = initInterfaces('Subject', 'Test', 'Sweep', 4);
 
 %% 2. Record impedances from TMSi SAGA
 SAGA_impedances(client, logger);
