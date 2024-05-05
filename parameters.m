@@ -20,8 +20,8 @@ function varargout = parameters(varargin)
 
 pars = struct;
 % % % Trying to pull the "relevant" ones to the top ... % % %
-pars.generated_data_folder = 'D:/Mouse/SCS/generated_data';
-pars.raw_data_folder_root = 'D:/Mouse/SCS/raw_data';
+pars.generated_data_folder = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/generated_data';
+pars.raw_data_folder_root = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/raw_data';
 
 % Frank-specific parameters
 pars.frank_valid_uni_channels = struct('A',[], 'B', []);

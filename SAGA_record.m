@@ -24,7 +24,7 @@ if ~isempty(options.Block)
 end
 SAGA_updateFileNames(client, logger, 'Intan', options.Intan, 'Tag', options.Tag);
 if ~isempty(options.Intan)
-    write(options.Intan, uint8('set runmode record'));
+    intan.startRecording(options.Intan);
     logger.info('Started Intan Recording');
     if ~isempty(options.Timer)
         options.Timer.TimerFcn = @(~,~)SAGA_stop(client, logger, 'Intan', options.Intan);

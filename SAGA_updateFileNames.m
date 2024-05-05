@@ -31,8 +31,7 @@ if ~isempty(options.Intan)
     if exist(full_sweep_folder, 'dir')==0
         mkdir(full_sweep_folder);
     end
-    write(options.Intan, uint8(sprintf('set Filename.Path %s', full_sweep_folder)));
-    write(options.Intan, uint8(sprintf('set Filename.BaseFilename %s_%04d_%02d_%02d_%d', SUBJ, YYYY, MM, DD, client.UserData.block)));
+    intan.setFile(options.Intan, SUBJ, YYYY, MM, DD, client.UserData.block, 'DataTankFolder', full_sweep_folder);
     logger.info('Updated Intan Folder: %s', full_sweep_folder);
 end
 logger.info(sprintf('Updated Filename = %s', new_emg_file_expr));

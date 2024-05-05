@@ -13,3 +13,6 @@
 [submodule "+TMSiSAGA"]
 	path = +TMSiSAGA
 	url = git@github.com:Neuro-Mechatronics-Interfaces/TMSiSAGA_MATLAB.git
+[submodule "+intan"]
+	path = +intan
+	url = git@github.com:Neuro-Mechatronics-Interfaces/matlab_package__intan.git

@@ -11,7 +11,7 @@ arguments
 end
 
 if ~isempty(options.Intan)
-    write(options.Intan, uint8('set runmode stop'));
+    intan.stopRecording(options.Intan);
     logger.info('Stopped Intan');
 end
 
