@@ -9,9 +9,9 @@ function am4100 = initAM4100(client, logger, options)
 %     logger mlog.Logger logging object.
 %
 % Options:
-%     AddressAM4100 = "192.168.88.150";
+%     AddressAM4100 = "127.0.0.1";
 %     PortAM4100 = 23;
-%     AddressIntan = "192.168.88.100";
+%     AddressIntan = "127.0.0.1";
 %     PortIntan = 5000;
 %     UseIntan = true;
 % 
@@ -24,9 +24,9 @@ function am4100 = initAM4100(client, logger, options)
 arguments
     client
     logger
-    options.AddressAM4100 = "192.168.88.150";
+    options.AddressAM4100 = "10.0.0.80";
     options.PortAM4100 = 23;
-    options.AddressIntan = "192.168.88.100";
+    options.AddressIntan = "127.0.0.1";
     options.PortIntan = 5000;
     options.UseIntan (1,1) logical = true;
     options.DefaultRecordingDuration = 20; % Seconds
