@@ -9,6 +9,7 @@ arguments
     options.DelayAfterRecCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRecCommand, 0)} = 0.1; 
     options.Tag {mustBeTextScalar} = 'STIM';
     options.Block {mustBeInteger} = [];
+    options.RawDataRoot {mustBeTextScalar} = "";
     options.Intan = [];
     options.Timer = [];
 
@@ -22,7 +23,7 @@ if ~isempty(options.Block)
     fprintf(1,'Set `block` to %d.\n', client.UserData.block);
     logger.info(sprintf('Block = %d', client.UserData.block));
 end
-SAGA_updateFileNames(client, logger, 'Intan', options.Intan, 'Tag', options.Tag);
+SAGA_updateFileNames(client, logger, 'Intan', options.Intan, 'Tag', options.Tag, 'RawDataRoot', options.RawDataRoot);
 if ~isempty(options.Intan)
     intan.startRecording(options.Intan);
     logger.info('Started Intan Recording');

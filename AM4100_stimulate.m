@@ -9,6 +9,7 @@ arguments
     options.DelayAfterRecCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRecCommand, 0)} = 0.1; 
     options.Tag {mustBeTextScalar} = 'STIM';
     options.StartRecording (1,1) logical = true;
+    options.RawDataRoot {mustBeTextScalar} = "";
 end
 
 if options.StartRecording
@@ -23,16 +24,19 @@ if options.StartRecording
             'Tag', options.Tag, ...
             'Block', client.UserData.block, ...
             'Intan', am4100.UserData.intan, ...
-            'Timer', am4100.UserData.timer);
+            'Timer', am4100.UserData.timer, ...
+            'RawDataRoot', options.RawDataRoot);
     end
     if ~isempty(logger)
         logger.info('Begin Stimulation');
     end
 end
-[rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s t one');  % set the trigger to free run
-if ~isempty(logger)
-    logger.info(sprintf('sent = %s', inputStr));
-    logger.info(sprintf('reply = %s', rplStr));
+if am4100.UserData.enable
+    [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s t one');  % set the trigger to free run
+    if ~isempty(logger)
+        logger.info(sprintf('sent = %s', inputStr));
+        logger.info(sprintf('reply = %s', rplStr));
+    end
 end
 if ~isempty(am4100.UserData.timer)
     start(am4100.UserData.timer);

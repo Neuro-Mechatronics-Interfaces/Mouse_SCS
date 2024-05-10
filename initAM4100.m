@@ -40,6 +40,11 @@ if ~isempty(client)
     am4100.UserData.year = client.UserData.year;
     am4100.UserData.month = client.UserData.month;
     am4100.UserData.day = client.UserData.day;
+else
+    am4100.UserData.subject = 'Test';
+    am4100.UserData.year = year(today);
+    am4100.UserData.month = month(today);
+    am4100.UserData.day = day(today);
 end
 am4100.UserData.recording_duration = options.DefaultRecordingDuration; % Seconds (default stim parameters)
 if options.UseIntan
@@ -50,7 +55,13 @@ else
     am4100.UserData.intan = [];
 end
 if isempty(client)
-    am4100.UserData.timer = [];
+    if options.UseIntan
+        am4100.UserData.timer = timer(...
+            'TimerFcn', @(~,~)INTAN_stop(am4100.UserData.intan, logger), ...
+            'StartDelay', am4100.UserData.recording_duration);
+    else
+        am4100.UserData.timer = [];
+    end
 else
     am4100.UserData.timer = timer(...
         'TimerFcn', @(~,~)SAGA_stop(client, logger, 'Intan', am4100.UserData.intan), ...
@@ -93,4 +104,5 @@ if ~isempty(logger)
     logger.info(sprintf('sent = %s', inputStr));
     logger.info(sprintf('reply = %s', rplStr));
 end
+am4100.UserData.enable = true;
 end

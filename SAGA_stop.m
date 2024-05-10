@@ -11,8 +11,7 @@ arguments
 end
 
 if ~isempty(options.Intan)
-    intan.stopRecording(options.Intan);
-    logger.info('Stopped Intan');
+    INTAN_stop(options.Intan, logger);
 end
 
 writeline(client, 'idle', client.UserData.saga.address, client.UserData.saga.port.control);

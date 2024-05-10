@@ -18,6 +18,7 @@ arguments
     options.PulseReductionFactor (1,1) double = 1; % Amount to scale down/widen the second phase by
     options.NBursts (1,1) double {mustBePositive, mustBeInteger} = 1;
     options.Tag {mustBeTextScalar} = 'STIM';
+    options.RawDataRoot {mustBeTextScalar} = "";
     options.StartRecording (1,1) logical = true;
 end
 
@@ -79,7 +80,8 @@ for ii = 1:nTotalLevels
         'StartRecording', options.StartRecording, ...
         'DelayAfterRunCommand', options.DelayAfterRunCommand, ...
         'DelayAfterNameCommand', options.DelayAfterNameCommand, ...
-        'DelayAfterRecCommand', options.DelayAfterRecCommand);
+        'DelayAfterRecCommand', options.DelayAfterRecCommand, ...
+        'RawDataRoot', options.RawDataRoot);
     if isempty(client)
         pause((options.PostBurstBuffer + n_pulses(ii)*pulse_period)*options.NBursts);
     else
@@ -118,7 +120,7 @@ if ~isempty(client)
         client.UserData.subject, client.UserData.year, ...
         client.UserData.month, client.UserData.day);
     sweep_folder = sprintf('%s_%d', tank, client.UserData.sweep);
-    save_folder = fullfile(parameters('raw_data_folder_root'), ...
+    save_folder = fullfile(options.RawDataRoot, ...
         client.UserData.subject, tank, sweep_folder);
     writetable(T, fullfile(save_folder, sprintf('%s.xlsx', sweep_folder)));
     save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), '-v7.3');
