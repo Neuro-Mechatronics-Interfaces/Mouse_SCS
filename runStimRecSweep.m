@@ -20,6 +20,8 @@ arguments
     options.Tag {mustBeTextScalar} = 'STIM';
     options.RawDataRoot {mustBeTextScalar} = "";
     options.StartRecording (1,1) logical = true;
+    options.UDP = [];
+    options.UDPRemotePort = nan;
 end
 
 % 1. Get all desired stimulation amplitudes.
@@ -31,7 +33,8 @@ nPulseWidthLevels = numel(options.PulseWidth);
 intensity = repmat(reshape(shuffledIntensities,nAmplitudeLevels,1), nFrequencyLevels*nPulseWidthLevels, 1);
 frequency = repmat(repelem(options.Frequency, nAmplitudeLevels, 1), nPulseWidthLevels, 1);
 pulse_width = repelem(options.PulseWidth, nAmplitudeLevels*nFrequencyLevels, 1);
-
+G_intensity = findgroups(intensity);
+G_frequency = findgroups(frequency);
 
 nTotalLevels = nAmplitudeLevels * nFrequencyLevels * nPulseWidthLevels;
 block = nan(size(intensity));
@@ -43,6 +46,13 @@ if ~isempty(logger)
     logger.info('IntensityOrder = %s', intensityOrderStr);
 end
 start_time = datetime('now');
+udpSender = options.UDP;
+if isnan(options.UDPRemotePort)
+    udpRemotePort = 5003;
+else
+    udpRemotePort = options.UDPRemotePort;
+end
+
 for ii = 1:nTotalLevels
     if options.CathodalLeading
         amp = -intensity(ii);
@@ -55,6 +65,10 @@ for ii = 1:nTotalLevels
         n_pulses(ii) = options.PulsesPerBurst;
     else
         n_pulses(ii) = round(options.BurstDuration / pulse_period);
+    end
+    if ~isempty(udpSender)
+        packet = jsonencode(struct('Frequency', G_frequency(ii), 'Amplitude', G_intensity(ii)));
+        writeline(udpSender, packet, "127.0.0.1", udpRemotePort);
     end
 
     levelStr = sprintf('Stim = %d uA', amp);
