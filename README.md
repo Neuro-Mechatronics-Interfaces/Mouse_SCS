@@ -50,6 +50,5 @@ Should really be NHP_ACUTE_DRGS but who keeps track?
  + [`plotSagaRecruitmentRaw`](plotSagaRecruitmentRaw.m) - Plot recruitment for individual SAGA channel data.  
 
 ### Raspberry Pi Stim Channel Switcher ###  
-Code that was run on the Raspberry Pi v4b that managed stimulation switching is saved in the following `gist`:  
-<script src="https://gist.github.com/m053m716/467d81521e5ea66db066c23a15b5570e.js"></script>
+Code that was run on the Raspberry Pi v4b that managed stimulation switching is saved in the following [gist](https://gist.github.com/m053m716/467d81521e5ea66db066c23a15b5570e).
 
