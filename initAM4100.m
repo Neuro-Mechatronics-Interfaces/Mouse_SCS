@@ -24,11 +24,14 @@ function am4100 = initAM4100(client, logger, options)
 arguments
     client
     logger
-    options.AddressAM4100 = "10.0.0.80";
-    options.PortAM4100 = 23;
-    options.AddressIntan = "127.0.0.1";
-    options.PortIntan = 5000;
+    options.AddressAM4100 {mustBeTextScalar} = "10.0.0.80";
+    options.PortAM4100 (1,1) {mustBePositive, mustBeInteger} = 23;
+    options.AddressIntan {mustBeTextScalar} = "127.0.0.1";
+    options.PortIntan (1,1) {mustBePositive, mustBeInteger} = 5000;
     options.UseIntan (1,1) logical = true;
+    options.UseRelays (1,1) logical = true;
+    options.AddressRelays = "10.0.0.10"; % IPv4 Address of the RPi v4b running stim switching relays on network
+    options.PortRelays (1,1) {mustBePositive, mustBeInteger} = 7010
     options.DefaultRecordingDuration = 20; % Seconds
 end
 
@@ -53,6 +56,13 @@ if options.UseIntan
     fprintf(1,'complete.\n');
 else
     am4100.UserData.intan = [];
+end
+if options.UseRelays
+    am4100.UserData.relay_pi = udpport();
+    am4100.UserData.relay_pi.UserData = struct('address', options.AddressRelays, 'port', options.PortRelays, 'logger', logger);
+    configureCallback(am4100.UserData.relay_pi, "terminator", @log_relay_interaction);
+else
+    am4100.UserData.relay_pi = [];
 end
 if isempty(client)
     if options.UseIntan
@@ -80,14 +90,14 @@ end
 sndStr='get rev';
 write(am4100,uint8(sprintf('%s\r',sndStr)));
 if ~isempty(logger)
-    logger.info(sprintf('Send= %s \n',sndStr));  %display send strring
+    logger.info(sprintf('sent= %s',sndStr));  %display send strring
 end
 pause(0.01); % and give it a bit of time to reply
 rplStr=read(am4100,am4100.BytesAvailable,'string');
 if isempty(logger)
-    fprintf(1,'Reply= %s \n', strtrim(rplStr));
+    fprintf(1,'reply= %s', strtrim(rplStr));
 else
-    logger.info(sprintf('Reply= %s \n', strtrim(rplStr)));  %display reply
+    logger.info(sprintf('reply= %s', strtrim(rplStr)));  %display reply
 end
 [rplStr,inputStr]=AM4100_sendCommand(am4100,'get active');
 if ~isempty(logger)

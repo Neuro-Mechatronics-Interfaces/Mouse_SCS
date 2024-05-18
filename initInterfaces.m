@@ -13,6 +13,9 @@ arguments
     options.UseAM4100 (1,1) logical = true;
     options.AddressAM4100 = "10.0.0.80"; % IPv4 Address of the AMS4100 device on network
     options.PortAM4100 = 23;
+    options.UseRelays (1,1) logical = true;
+    options.AddressRelays = "10.0.0.10"; % IPv4 Address of the RPi v4b running stim switching relays on network
+    options.PortRelays (1,1) {mustBePositive, mustBeInteger} = 7010
     
     % Options for INTAN system
     options.UseIntan (1,1) logical = true; % Set false to not try to connect to Intan server

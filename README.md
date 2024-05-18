@@ -19,7 +19,7 @@ Should really be NHP_ACUTE_DRGS but who keeps track?
 
 ### Main Experiment Functions ###  
  + [`runStimRecSweep`](runStimRecSweep.m) - Returns a table of the stim/rec sweep intensity and block indices.  
- + [`runStimRecSweepFreqs`](runStimRecSweepFreqs.m) - Returns a table of the stim/rec sweep intensity and block indices. 
+ + [`runStimRecSweepAllChannels`](runStimRecSweepAllChannels.m) - Returns a table of the stim/rec sweep intensity and block indices, for ALL channels. Requires Raspberry Pi v4b with Relay module to MUX the AM4100 anode to the stimulation channels. 
 
 ### AM4100 Functions ###  
  + [`AM4100_sendCommand`](AM4100_sendCommand.m) - Send message to stimulator and return formatted response message.  
@@ -48,4 +48,8 @@ Should really be NHP_ACUTE_DRGS but who keeps track?
 ### Plotting Functions ###  
  + [`plotRecruitment`](plotRecruitment.m) - Plot recruitment summary figure.  
  + [`plotSagaRecruitmentRaw`](plotSagaRecruitmentRaw.m) - Plot recruitment for individual SAGA channel data.  
+
+### Raspberry Pi Stim Channel Switcher ###  
+Code that was run on the Raspberry Pi v4b that managed stimulation switching is saved in the following `gist`:  
+<script src="https://gist.github.com/m053m716/467d81521e5ea66db066c23a15b5570e.js"></script>
 
