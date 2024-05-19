@@ -5,6 +5,7 @@ arguments
     am4100
     logger
     options.CathodalLeading (1,1) logical = true; 
+    options.Channel (1,1) {mustBeMember(options.Channel,1:8)} = 1;
     options.DelayAfterSettingParameters (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterSettingParameters,0)} = 0.5; % 
     options.DelayAfterRunCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRunCommand, 0)} = 0.025;
     options.DelayAfterNameCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterNameCommand, 0)} = 0.025; 
@@ -40,6 +41,7 @@ nTotalLevels = nAmplitudeLevels * nFrequencyLevels * nPulseWidthLevels;
 block = nan(size(intensity));
 sweep = nan(size(intensity));
 n_pulses = nan(nTotalLevels, 1);
+channel = ones(size(intensity)).*options.Channel;
 
 intensityOrderStr = strjoin(cellstr(num2str(intensity)), ', ');
 if ~isempty(logger)
@@ -123,7 +125,7 @@ for ii = 1:nTotalLevels
     end
 end
 
-T = table(sweep, block, intensity, frequency, pulse_width, n_pulses);
+T = table(sweep, block, channel, intensity, frequency, pulse_width, n_pulses);
 T.Properties.UserData = struct(...
     'Parameters', options, ...
     'TStart', start_time, ...
@@ -137,7 +139,7 @@ if ~isempty(client)
     save_folder = fullfile(options.RawDataRoot, ...
         client.UserData.subject, tank, sweep_folder);
     writetable(T, fullfile(save_folder, sprintf('%s.xlsx', sweep_folder)));
-    save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), '-v7.3');
+    save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T', '-v7.3');
     client.UserData.sweep = client.UserData.sweep + 1;
     client.UserData.block = 0;
 end
