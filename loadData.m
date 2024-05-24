@@ -105,7 +105,7 @@ if options.LoadSpreadsheet
     if options.Verbose
         fprintf(1,'Loading sweep spreadsheet...\n');
     end
-    T = loadSweepSpreadsheet(raw_root, sweep);
+    T = loadSweepSpreadsheet(raw_root, SUBJ, tank, sweep);
 else
     T = [];
 end

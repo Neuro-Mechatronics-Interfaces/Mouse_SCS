@@ -3,16 +3,20 @@ AMPLIFIER_CHANNELS = 0:15;
 ANALOG_CHANNELS = 1;
 DIG_IN_PRESENT = true;
 SAMPLE_RATE = 20000;
-INTENSITIES = 500:50:650;
-FREQUENCIES = [1 10 100];
+% INTENSITIES = 500:50:650;
+INTENSITIES = [500:500:1500];
+FREQUENCIES = [1, 10, 100];
+% FREQUENCIES = 100;
 PULSES_PER_BURST = 10;
 BURST_REPETITIONS = 5;
+% BURST_REPETIONS = 3;
 STIM_CHANNEL = 1;
+AMPLIFIER_PORT = 'b';
 
 intanTcpClient = tcpclient("127.0.0.1", 5000);
 intanTcpClient.configureCallback("byte", 1, @(src,~)fprintf(read(src)));
 waveformTcpClient = tcpclient("127.0.0.1", 5001);
-numAmplifierBands = intan.enablePortChannelBatch(intanTcpClient, 'a', AMPLIFIER_CHANNELS);
+numAmplifierBands = intan.enablePortChannelBatch(intanTcpClient, AMPLIFIER_PORT, AMPLIFIER_CHANNELS);
 numAnalogChannels = numel(ANALOG_CHANNELS);
 for ii = 1:numAnalogChannels
     intan.setAnalogTCP(intanTcpClient,ANALOG_CHANNELS(ii),1); % 1 analog channel present (parameter 3)
@@ -39,12 +43,23 @@ IPV4_ADDRESS_TMSI  = "127.0.0.1";   % Device running TMSi acquisition
 
 START_SWEEP = 0; % Modify this if you have to reset in the middle.
 START_BLOCK = 0; % Modify this if you have to reset in the middle. 
-SUBJECT_NAME = "Test";  % Name of the subject 
+SUBJECT_NAME = "Pilot_SCS_N_CEJ_01";  % Name of the subject
+RAW_DATA_ROOT = parameters('raw_data_folder_root'); % Should be correct on NML Rodent lab computer
+
+MAP_NAME_LOCAL = sprintf('%s_Channel_Map.txt',SUBJECT_NAME);
+DATA_TANK_ROOT = fullfile(RAW_DATA_ROOT,SUBJECT_NAME);
+if exist(DATA_TANK_ROOT,'dir')==0
+    mkdir(DATA_TANK_ROOT);
+end
+MAP_NAME_REMOTE = fullfile(RAW_DATA_ROOT, MAP_NAME_LOCAL);
+if exist(MAP_NAME_LOCAL,'file')==0
+    copyfile('Default_Mouse_EMG_Channel_Map.txt', MAP_NAME_REMOTE);
+else
+    copyfile(MAP_NAME_LOCAL, MAP_NAME_REMOTE); 
+end
 
 STIM_ENABLE = true;
 INTAN_ENABLE = true;
-
-RAW_DATA_ROOT = parameters('raw_data_folder_root'); % Should be correct on NML Rodent lab computer
 % RAW_DATA_ROOT = "C:/Data/SCS";
 [client, am4100, logger] = initInterfaces( ...
     'UseAM4100', STIM_ENABLE, ...
@@ -54,22 +69,26 @@ RAW_DATA_ROOT = parameters('raw_data_folder_root'); % Should be correct on NML R
     'Block', START_BLOCK, ...
     'AddressTMSi', IPV4_ADDRESS_TMSI, ...
     'AddressAM4100', IPV4_ADDRESS_AM4100, ...
-    'AddressIntan', IPV4_ADDRESS_INTAN);
-am4100.UserData.intan = intanTcpClient;
-am4100.UserData.timer = timer(...
-            'TimerFcn', @(~,~)INTAN_stop(intan_client, logger), ...
-            'StartDelay', 20);
+    'AddressIntan', IPV4_ADDRESS_INTAN, ...
+    'IntanClient', intanTcpClient);
+% am4100.UserData.intan = intanTcpClient;
+% am4100.UserData.timer = timer(...
+%             'TimerFcn', @(~,~)INTAN_stop(intan_client, logger), ...
+%             'StartDelay', 20);
 
 T = runStimRecSweep(client, am4100, logger, ...
     'Channel', STIM_CHANNEL, ...
     'Intensity', INTENSITIES, ...
     'Frequency', FREQUENCIES, ...
-    'PulsesPerBurst', PULSES_PER_BURST, ...
+    ...'PulsesPerBurst', PULSES_PER_BURST, ... % DO NOT SPECIFY THIS!!!
     'NBursts', BURST_REPETITIONS, ...
     'RawDataRoot', RAW_DATA_ROOT, ...
     'UDP', udpport, ...
     'UDPRemotePort', waveformTcpClient.UserData.UDP.LocalPort);
 disp(T);
+
+% muscle = load_channel_map(sprintf('%s_Channel_Map.txt',SUBJECT_NAME));
+
 
 % pause(1.0);
 % [data, timestamp] = intan.readWaveformByteBlock(waveformTcpClient, numAmplifierBands, 1, 1);

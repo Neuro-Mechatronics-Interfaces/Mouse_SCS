@@ -120,7 +120,7 @@ else
         end
         filtering.FilterType = strcat(filtering.FilterType,filter_str);
         [filtering.coeff.first.b,filtering.coeff.first.a] = butter(options.FilterOrder,options.CutoffFrequency./(options.SampleRate/2),'bandpass');
-        data = filter(filteirng.coeff.first.b, filtering.coeff.second.a, data, [], 2);
+        data = filter(filtering.coeff.first.b, filtering.coeff.first.a, data, [], 2);
         data(:, 1:options.NBlankedSamplesAtStart) = 0;
         if options.Verbose
             fprintf(1,'complete\n');

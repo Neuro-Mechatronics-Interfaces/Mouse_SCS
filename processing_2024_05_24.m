@@ -11,14 +11,14 @@ YYYY = 2024;
 MM = 5;
 DD = 24;
 SWEEP = 4;
-% RAW_DATA_ROOT = "C:/Data/SCS";
-RAW_DATA_ROOT = parameters('raw_data_folder_root');
+RAW_DATA_ROOT = "C:/Data/SCS";
+% RAW_DATA_ROOT = parameters('raw_data_folder_root');
 
 % % % Parameters for response estimation % % %
 DIG_IN_SYNC_CHANNEL_NUMBER = 1; % Index of DIG_IN connector used for stim onset sync signals
-TLIM_SNIPPETS = [-0.02, 0.010]; % Seconds (for signal indexing, relative to each stim onset)
+TLIM_SNIPPETS = [-0.002, 0.009]; % Seconds (for signal indexing, relative to each stim onset)
 TLIM_RESPONSE = [0.003, 0.008]; % Seconds (for estimating power in evoked signal, relative to stim onset)
-TLIM_BASELINE = [-0.02, 0.000]; % Seconds (for normalizing responses, relative to stim onset)
+TLIM_BASELINE = [-0.002, 0.000]; % Seconds (for normalizing responses, relative to stim onset)
 
 
 %% 2. Load data
@@ -33,15 +33,16 @@ TLIM_BASELINE = [-0.02, 0.000]; % Seconds (for normalizing responses, relative t
         "TLimResponse", TLIM_RESPONSE, ...
         "TLimBaseline", TLIM_BASELINE, ...
         "DigInSyncChannel", DIG_IN_SYNC_CHANNEL_NUMBER, ...
-        "Verbose", true);
+        "Verbose", true, ...
+        'FilterParameters',{'ApplyCAR',true,'BlankArtifactBeforeFiltering',true,'CutoffFrequency',[20,300]});
 
 %% 4. Quick heuristic to visualize responses across all channels
-SNIPPET_BLOCK = 1; % Ad hoc block selection for visualizing
+SNIPPET_BLOCK = 8; % Ad hoc block selection for visualizing
 
 [boxPlotFigure, response_channels, non_response_channels] = plotResponseBoxes( ...
     response_normed{SNIPPET_BLOCK},...
     'Subject', SUBJ, 'Year', YYYY, 'Month', MM, 'Day', DD, ...
-    'Sweep', SWEEP, 'Block', SNIPPET_BLOCK);
+    'Sweep', SWEEP, 'Block', SNIPPET_BLOCK');
 
 %% 5. Plot selected examples of response snippets
 
