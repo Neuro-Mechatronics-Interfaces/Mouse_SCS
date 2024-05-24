@@ -21,6 +21,7 @@ arguments
     options.UseIntan (1,1) logical = true; % Set false to not try to connect to Intan server
     options.AddressIntan = "127.0.0.1"; % IPv4 Address of device hosting Intan command server
     options.PortIntan = 5000; % Port for controlling the Intan command server
+    options.IntanClient = [];
     
     % Options for TMSi client
     options.AddressTMSi (1,1) string = "127.0.0.1"; % Address of TMSi HOST machine
@@ -58,7 +59,8 @@ if options.UseAM4100
         'AddressIntan', options.AddressIntan, ...
         'PortAM4100', options.PortAM4100, ...
         'PortIntan', options.PortIntan, ...
-        'UseIntan', options.UseIntan);
+        'UseIntan', options.UseIntan, ...
+        'IntanClient', options.IntanClient);
 else
     if options.UseIntan
         intan_client = tcpclient(options.AddressIntan, options.PortIntan);

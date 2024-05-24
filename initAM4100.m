@@ -33,6 +33,7 @@ arguments
     options.AddressRelays = "10.0.0.10"; % IPv4 Address of the RPi v4b running stim switching relays on network
     options.PortRelays (1,1) {mustBePositive, mustBeInteger} = 7010
     options.DefaultRecordingDuration = 20; % Seconds
+    options.IntanClient = [];
 end
 
 am4100=tcpclient(options.AddressAM4100, options.PortAM4100); %port 23
@@ -52,7 +53,11 @@ end
 am4100.UserData.recording_duration = options.DefaultRecordingDuration; % Seconds (default stim parameters)
 if options.UseIntan
     fprintf(1,'Attempting to connect to INTAN...')
-    am4100.UserData.intan = tcpclient(options.AddressIntan, options.PortIntan);
+    if isempty(options.IntanClient)
+        am4100.UserData.intan = tcpclient(options.AddressIntan, options.PortIntan);
+    else
+        am4100.UserData.intan = options.IntanClient;
+    end
     fprintf(1,'complete.\n');
 else
     am4100.UserData.intan = [];
