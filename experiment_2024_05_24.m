@@ -1,4 +1,4 @@
-%%EXAMPLE_QUICK_CONNECT_INTAN  Template for connecting to Intan/running experimental sweeps.
+%%EXPERIMENT_2024_05_24  Template for connecting to Intan/running experimental sweeps.
 AMPLIFIER_CHANNELS = 0:15;
 ANALOG_CHANNELS = 1;
 DIG_IN_PRESENT = true;
@@ -39,7 +39,7 @@ IPV4_ADDRESS_TMSI  = "127.0.0.1";   % Device running TMSi acquisition
 
 START_SWEEP = 0; % Modify this if you have to reset in the middle.
 START_BLOCK = 0; % Modify this if you have to reset in the middle. 
-SUBJECT_NAME = "Test";  % Name of the subject 
+SUBJECT_NAME = "Pilot_SCS_N_CEJ_01";  % Name of the subject 
 
 STIM_ENABLE = true;
 INTAN_ENABLE = true;
