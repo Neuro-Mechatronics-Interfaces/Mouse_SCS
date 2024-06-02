@@ -30,6 +30,10 @@ if options.StartRecording
     if ~isempty(logger)
         logger.info('Begin Stimulation');
     end
+else
+    if ~isempty(am4100.UserData.intan)
+       intan.startRunning(am4100.UserData.intan); 
+    end
 end
 if am4100.UserData.enable
     [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s t one');  % set the trigger to free run

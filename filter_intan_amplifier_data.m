@@ -18,7 +18,7 @@ arguments
     options.ApplyFiltering (1,1) logical = true;
     options.ApplyCAR (1,1) logical = true;
     options.ApplyPreFilterCAR (1,1) logical = false;
-    options.ArtifactDuration (1,1) double = 5e-4; % Artifact duration (seconds)
+    options.ArtifactDuration (1,1) double = 1e-3; % Artifact duration (seconds)
     options.BlankArtifactBeforeFiltering (1,1) logical = true;
     options.OutlierRejectionCARThresholdDeviations (1,1) double = 3.5; % If channel-wise signal RMS deviates from median RMS by greater than this value, set to zero and suppress in CAR
     options.ArtifactOnset (1,:) {mustBePositive, mustBeInteger} = [];

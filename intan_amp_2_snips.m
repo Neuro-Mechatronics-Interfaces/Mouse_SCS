@@ -1,4 +1,4 @@
-function [snips, t, response_normed, response_raw, filtering] = intan_amp_2_snips(intan, options)
+function [snips, t, response_normed, response_raw, filtering, data] = intan_amp_2_snips(intan, options)
 %INTAN_AMP_2_SNIPS  Returns snippets cell arrays of response tensors (and optionally, second output as struct with filtering parameters).
 %
 % Syntax:

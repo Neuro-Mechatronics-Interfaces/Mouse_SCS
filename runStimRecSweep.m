@@ -68,6 +68,7 @@ for ii = 1:nTotalLevels
     else
         n_pulses(ii) = round(options.BurstDuration / pulse_period);
     end
+    n_pulses(ii) = max(n_pulses(ii),1);
     if ~isempty(udpSender)
         packet = jsonencode(struct('Frequency', G_frequency(ii), 'Amplitude', G_intensity(ii)));
         writeline(udpSender, packet, "127.0.0.1", udpRemotePort);
