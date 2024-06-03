@@ -80,6 +80,7 @@ for ii = 1:N
     for iCh = 1:nCh
         samples = data(iCh,:);
         snips{ii}(:,iCh,:) = samples(mask);
+        snips{ii}(:,iCh,:) = snips{ii}(:,iCh,:)-mean(snips{ii}(1:20,iCh,:),1);
         response_raw{ii}(:,iCh) = squeeze(mean(sqrt(snips{ii}(iResponse,iCh,:).^2),1));
         response_normed{ii}(:,iCh) = response_raw{ii}(:,iCh) ./ squeeze(mean(sqrt(snips{ii}(iBaseline,iCh,:).^2),1));
     end

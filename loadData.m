@@ -37,12 +37,13 @@ arguments
     SWEEP (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(SWEEP, 0)}
     options.LoadIntan (1,1) logical = true;
     options.LoadSAGA (1,1) logical = true;
-    options.LoadSpreadsheet (1,1) logical = true;
     options.SAGA (1,:) string = ["A", "B"];
     options.SAGA_Tag {mustBeTextScalar} = "STIM";
     options.RawDataRoot {mustBeTextScalar} = "";
     options.Verbose (1,1) logical = true;
 end
+
+
 
 if strlength(options.RawDataRoot) == 0
     raw_root = parameters('raw_data_folder_root');
@@ -52,23 +53,26 @@ end
 tank = sprintf('%s_%04d_%02d_%02d', SUBJ, YYYY, MM, DD);
 sweep = sprintf('%s_%d', tank, SWEEP);
 
+if options.Verbose
+    fprintf(1,'Loading sweep spreadsheet...\n');
+end
+T = loadSweepSpreadsheet(raw_root, SUBJ, tank, sweep);
+
 if options.LoadIntan
     if options.Verbose
         fprintf(1,'Loading Intan sweeps...\n');
     end
-    intan_expr = fullfile(raw_root, SUBJ, tank, sweep, sprintf('%s_*_*_*', tank));
-    F = dir(intan_expr);
-    intan = cell(size(F));
-    for iF = 1:numel(F)
-        if ~F(iF).isdir
-            continue;
-        end
-        Ff = dir(fullfile(F(iF).folder, F(iF).name, sprintf('%s_*.rhd', tank)));
+    intan = cell(size(T,1),1);
+    for iT = 1:size(T,1)
+        intan_expr = fullfile(raw_root, SUBJ, tank, sweep, sprintf('%s_%d_*_*', tank, T.block(iT)));
+        F = dir(intan_expr);
+        
+        Ff = dir(fullfile(F(1).folder, F(1).name, sprintf('%s_*.rhd', tank)));
         if numel(Ff)~=1
-            error("%d elements in sub-folder (%s). Should only be 1.\n", numel(Ff), fullfile(F(iF).folder, F(iF).name));
+            error("%d elements in sub-folder (%s). Should only be 1.\n", numel(Ff), fullfile(F(1).folder, F(1).name));
         end
         fname = fullfile(Ff(1).folder, Ff(1).name);
-        intan{iF} = io.read_Intan_RHD2000_file(fname);
+        intan{iT} = io.read_Intan_RHD2000_file(fname);
     end
     intan = vertcat(intan{:});
 else
@@ -100,13 +104,4 @@ else
     saga = [];
 end
 
-
-if options.LoadSpreadsheet
-    if options.Verbose
-        fprintf(1,'Loading sweep spreadsheet...\n');
-    end
-    T = loadSweepSpreadsheet(raw_root, SUBJ, tank, sweep);
-else
-    T = [];
-end
 end
