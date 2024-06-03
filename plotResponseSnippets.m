@@ -1,67 +1,95 @@
-function fig = plotResponseSnippets(t, snips, channel, options)
+function fig = plotResponseSnippets(t, snips, channel, T, options)
 %PLOTRESPONSESNIPPETS  Plot snippet response squiggles
 %
 % Syntax:
-%   fig = plotResponseSnippets(t, snips, channel, 'Name', Value, ...);
+%   fig = plotResponseSnippets(t, snips, channel, T, 'Name', Value, ...);
 arguments
     t (1,:) double
-    snips (:, :, :) double
+    snips
     channel (1,:) {mustBePositive, mustBeInteger}
+    T table % Table as returned by loadData
     options.Subject {mustBeTextScalar} = "Unknown";
     options.Year (1,1) double = year(today);
     options.Month (1,1) double = month(today);
     options.Day (1,1) double = day(today);
     options.Sweep (1,1) double {mustBeInteger} = 0;
-    options.Block (1,1) double {mustBeInteger} = 0;
     options.Title {mustBeTextScalar} = "";
     options.Subtitle {mustBeTextScalar} = "";
     options.XLabel {mustBeTextScalar} = "";
     options.YLabel {mustBeTextScalar} = "";
-    options.YOffset (1,1) double = 35;
+    options.YOffset (1,1) double = 2500;
     options.CMapData = [];
     options.Muscle (:,1) string = ""
 end
 
-fig = figure('Color', 'w', 'Name', 'Response Snippet Examples');
-L = tiledlayout(fig, 'flow');
-nResponses = size(snips,3);
-yOffset = 0:options.YOffset:(options.YOffset*(nResponses-1));
-if isempty(options.CMapData)
-    cdata = jet(numel(channel));
-else
-    cdata = options.CMapData;
-end
-
-for iCh = 1:numel(channel)
-    ax = nexttile(L);
-    set(ax,'NextPlot','add',...
-        'XLim',[t(1), t(end)], ...
-        'YLim',[-options.YOffset, options.YOffset*nResponses], ...
-        'FontName','Tahoma','XColor','k','YColor','none');
-    plot(ax, t, squeeze(snips(:,channel(iCh),:))+yOffset, 'Color', cdata(iCh,:));
-    if numel(options.Muscle) == numel(channel)
-        title(ax, options.Muscle(iCh), 'FontName','Consolas','Color',cdata(iCh,:));
+[~,TID] = findgroups(T(:,["frequency","pulse_width","channel"]));
+fig = gobjects(size(TID,1),1);
+for iT = 1:size(TID,1)
+    fig(iT) = figure('Color', 'w', 'Name', 'Response Snippet Examples', ...
+        'Units', 'inches', ...
+        'Position', [0.5 0.5 10 5.75], ...
+        'UserData', struct('Title', "", 'Subtitle', "", 'Frequency', []));
+    L = tiledlayout(fig(iT), 'flow');
+    Tsub = sortrows(T(T.frequency == TID.frequency(iT),:),'intensity','ascend');
+    snip_data = cat(3,snips{Tsub.block+1});
+    n_snips = cellfun(@(C)size(C,3),snips(Tsub.block+1));
+    nResponses = size(snip_data,3);
+    yOffset = 0:options.YOffset:(options.YOffset*(nResponses-1));
+    if isempty(options.CMapData)
+        cdata = jet(numel(channel));
     else
-        title(ax, sprintf('CH-%03d', channel(iCh)), 'FontName','Consolas','Color',cdata(iCh,:));
+        cdata = options.CMapData;
     end
+
+    for iCh = 1:numel(channel)
+        ax = nexttile(L);
+        [G_intensity,uG] = findgroups(Tsub.intensity);
+        G_intensity = repelem(G_intensity,n_snips,1);
+        cdata_cur = flipud(cm.umap(cdata(iCh,:),numel(uG)+6));
+        cdata_cur([1,2,(end-3):end],:) = [];
+        cdata_cur = double(cdata_cur(G_intensity,:))./255.0;
+        set(ax,'NextPlot','add',...
+            'XLim',[t(1), t(end)], ...
+            'YLim',[-options.YOffset, options.YOffset*nResponses], ...
+            'ColorOrder', cdata_cur, ...
+            'FontName','Tahoma','XColor','k','YColor','none');
+        plot(ax, t, squeeze(snip_data(:,channel(iCh),:))+yOffset);
+        if numel(options.Muscle) == numel(channel)
+            title(ax, options.Muscle(iCh), 'FontName','Consolas','Color',cdata(iCh,:));
+        else
+            title(ax, sprintf('CH-%03d', channel(iCh)), 'FontName','Consolas','Color',cdata(iCh,:));
+        end
+    end
+
+    if strlength(options.Title) > 0
+        title(L, options.Title, ...
+            'FontName','Tahoma','Color','k');
+        fig(iT).UserData.Title = options.Title;
+    else
+
+        txt = sprintf('%s: %04d-%02d-%02d | Sweep-%d', ...
+            full_subj_name_2_short_name(options.Subject), options.Year, options.Month, options.Day, options.Sweep);
+        title(L, txt, ...
+            'FontName','Tahoma','Color','k');
+        fig(iT).UserData.Title = txt;
+    end
+    if strlength(options.Subtitle) > 0
+        subtitle(L, options.Subtitle, ...
+            'FontName','Tahoma','Color',[0.65 0.65 0.65]);
+        fig(iT).UserData.Subtitle = options.Subtitle;
+    else
+        subtxt = sprintf('%d-Hz (%d\\muA - %d\\muA)',TID.frequency(iT),Tsub.intensity(1),Tsub.intensity(end));
+        subtitle(L,subtxt, ...
+            'FontName','Tahoma','Color',[0.65 0.65 0.65]);
+        fig(iT).UserData.Subtitle = subtxt;
+    end
+    if strlength(options.XLabel) > 0
+        xlabel(L, options.XLabel, 'FontName','Tahoma','Color','k');
+    end
+    if strlength(options.YLabel) > 0
+        ylabel(L, options.YLabel, 'FontName','Tahoma','Color','k');
+    end
+    fig(iT).UserData.Frequency = TID.frequency(iT);
 end
 
-if strlength(options.Title) > 0
-    title(L, options.Title, ...
-        'FontName','Tahoma','Color','k');
-else
-    title(L, sprintf('%s: %04d-%02d-%02d | Sweep-%d | Block-%d', ...
-        strrep(options.Subject,'_','\_'), options.Year, options.Month, options.Day, options.Sweep, options.Block), ...
-        'FontName','Tahoma','Color','k');
-end
-if strlength(options.Subtitle) > 0
-    subtitle(L, options.Subtitle, ...
-        'FontName','Tahoma','Color',[0.65 0.65 0.65]);
-end
-if strlength(options.XLabel) > 0
-    xlabel(L, options.XLabel, 'FontName','Tahoma','Color','k');
-end
-if strlength(options.YLabel) > 0
-    ylabel(L, options.YLabel, 'FontName','Tahoma','Color','k');
-end
 end

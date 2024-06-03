@@ -1,4 +1,4 @@
-%PROCESSING_2024_06_02
+%PROCESSING_2024_06_04  Processing associated with 2024-06-04 procedure.
 
 close all force;
 clc;
@@ -6,13 +6,14 @@ clear;
 
 %% 1. Set parameters
 % % % Recording-specific metadata parameters % % %
-SUBJ = "Pilot_SCS_N_CEJ_02";
+SUBJ = "Pilot_SCS_N_CEJ_03";
 YYYY = 2024;
 MM = 6;
-DD = 2;
-SWEEP = [0,13,11,12];
-SIDE = ["L","L","R","L"];
-RAW_DATA_ROOT = "C:/Data/SCS";
+DD = 4;
+% SWEEP = [0,13,11,12];
+SWEEP = 0;
+% RAW_DATA_ROOT = "C:/Data/SCS";
+RAW_DATA_ROOT = parameters('raw_data_folder_root');
 EXPORT_DATA_ROOT = parameters('local_export_folder');
 
 % % % Parameters for response estimation % % %

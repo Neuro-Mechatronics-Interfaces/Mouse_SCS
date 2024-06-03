@@ -22,6 +22,7 @@ pars = struct;
 % % % Trying to pull the "relevant" ones to the top ... % % %
 pars.generated_data_folder = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/generated_data';
 pars.raw_data_folder_root = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/raw_data';
+pars.local_export_folder = strrep(fullfile(pwd,'export'),'\','/');
 
 % Frank-specific parameters
 pars.frank_valid_uni_channels = struct('A',[], 'B', []);

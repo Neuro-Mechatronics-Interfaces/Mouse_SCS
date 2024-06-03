@@ -6,6 +6,7 @@ arguments
     logger
     options.CathodalLeading (1,1) logical = true; 
     options.Channel (1,1) {mustBeMember(options.Channel,1:8)} = 1;
+    options.Return (1,1) {mustBeMember(options.Return,["X","L","R"])} = "X";
     options.DelayAfterSettingParameters (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterSettingParameters,0)} = 0.5; % 
     options.DelayAfterRunCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRunCommand, 0)} = 0.025;
     options.DelayAfterNameCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterNameCommand, 0)} = 0.025; 
@@ -21,6 +22,8 @@ arguments
     options.Tag {mustBeTextScalar} = 'STIM';
     options.RawDataRoot {mustBeTextScalar} = "";
     options.StartRecording (1,1) logical = true;
+    options.BlockUpdateHandle = [];
+    options.ProgressDialogBar = [];
     options.UDP = [];
     options.UDPRemotePort = nan;
 end
@@ -42,6 +45,7 @@ block = nan(size(intensity));
 sweep = nan(size(intensity));
 n_pulses = nan(nTotalLevels, 1);
 channel = ones(size(intensity)).*options.Channel;
+return_channel = repmat(options.Return,numel(intensity),1);
 
 intensityOrderStr = strjoin(cellstr(num2str(intensity)), ', ');
 if ~isempty(logger)
@@ -79,9 +83,16 @@ for ii = 1:nTotalLevels
         logger.info(levelStr);
     end
     disp(levelStr);
+    if ~isempty(options.ProgressDialogBar)
+        options.ProgressDialogBar.Message = sprintf('%d-Hz: %s', frequency(ii), levelStr);
+    end
     if ~isempty(client)
         block(ii) = client.UserData.block;
         sweep(ii) = client.UserData.sweep;
+        if ~isempty(options.BlockUpdateHandle)
+            options.BlockUpdateHandle.Value = client.UserData.block;
+            drawnow();
+        end
     end
     AM4100_setStimParameters(am4100, logger, ...
         amp, pw, ...
@@ -106,6 +117,9 @@ for ii = 1:nTotalLevels
             pause(0.1); % Wait 100-ms then check again.
         end
     end
+    if ~isempty(options.ProgressDialogBar)
+        options.ProgressDialogBar.Value = ii/nTotalLevels;
+    end
     current_duration = datetime('now')-start_time;
     current_rate = current_duration / ii;
     n_remaining = nTotalLevels - ii;
@@ -126,7 +140,7 @@ for ii = 1:nTotalLevels
     end
 end
 
-T = table(sweep, block, channel, intensity, frequency, pulse_width, n_pulses);
+T = table(sweep, block, channel, return_channel, intensity, frequency, pulse_width, n_pulses);
 T.Properties.UserData = struct(...
     'Parameters', options, ...
     'TStart', start_time, ...

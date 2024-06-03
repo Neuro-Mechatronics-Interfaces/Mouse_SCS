@@ -31,6 +31,7 @@ arguments
     options.TLimBaseline (1,2) double = [-0.002, 0.000]; % Window in which to estimate the baseline
     options.TLimResponse (1,2) double = [0.003, 0.008]; % Window in which to estimate response power
     options.DigInSyncChannel (1,1) {mustBePositive, mustBeInteger} = 2;
+    options.SyncDebounce (1,1) double = 0.005;
     options.Verbose (1,1) logical = true;
 end
 if options.Verbose
@@ -48,7 +49,7 @@ for ii = 1:N
         iBaseline = (t >= options.TLimBaseline(1)) & (t < options.TLimBaseline(2));
         iResponse = (t >= options.TLimResponse(1)) & (t < options.TLimResponse(2));
     end
-    rising = parse_sync_from_intan(intan(ii).t_dig, intan(ii).board_dig_in_data(options.DigInSyncChannel,:));
+    rising = parse_sync_from_intan(intan(ii).t_dig, intan(ii).board_dig_in_data(options.DigInSyncChannel,:), 'Debounce', options.SyncDebounce);
     mask = iVec + rising;
     i_remove = any((mask < 1) | (mask > size(intan(ii).amplifier_data,2)), 1);
     mask(:,i_remove) = [];

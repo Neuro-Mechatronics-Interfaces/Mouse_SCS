@@ -16,3 +16,6 @@
 [submodule "+intan"]
 	path = +intan
 	url = git@github.com:Neuro-Mechatronics-Interfaces/matlab_package__intan.git
+[submodule "+cm"]
+	path = +cm
+	url = https://github.com/Neuro-Mechatronics-Interfaces/matlab_package__cm.git
