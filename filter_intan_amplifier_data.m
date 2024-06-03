@@ -27,6 +27,7 @@ arguments
     options.NBlankedSamplesAtStart (1,1) {mustBePositive, mustBeInteger} = 100; % To account for using `filter` instead of `filtfilt`
     options.FilterOrder (1,1) {mustBePositive, mustBeInteger} = 1;
     options.SampleRate (1,1) {mustBePositive} = 20000;
+    options.SuppressArtifactAfterFiltering (1,1) logical = false;
     options.Verbose (1,1) logical = true;
 end
 
@@ -128,7 +129,7 @@ else
     end
 end
 
-if ~options.BlankArtifactBeforeFiltering && ~isempty(options.ArtifactOnset)
+if ~options.BlankArtifactBeforeFiltering && ~isempty(options.ArtifactOnset) && options.SuppressArtifactAfterFiltering
     if options.Verbose
         fprintf(1,'Zero-ing artifact after filtering...');
     end

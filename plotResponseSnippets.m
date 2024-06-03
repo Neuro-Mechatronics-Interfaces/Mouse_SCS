@@ -19,6 +19,7 @@ arguments
     options.YLabel {mustBeTextScalar} = "";
     options.YOffset (1,1) double = 35;
     options.CMapData = [];
+    options.Muscle (:,1) string = ""
 end
 
 fig = figure('Color', 'w', 'Name', 'Response Snippet Examples');
@@ -38,7 +39,11 @@ for iCh = 1:numel(channel)
         'YLim',[-options.YOffset, options.YOffset*nResponses], ...
         'FontName','Tahoma','XColor','k','YColor','none');
     plot(ax, t, squeeze(snips(:,channel(iCh),:))+yOffset, 'Color', cdata(iCh,:));
-    title(ax, sprintf('CH-%03d', channel(iCh)), 'FontName','Consolas','Color',cdata(iCh,:));
+    if numel(options.Muscle) == numel(channel)
+        title(ax, options.Muscle(iCh), 'FontName','Consolas','Color',cdata(iCh,:));
+    else
+        title(ax, sprintf('CH-%03d', channel(iCh)), 'FontName','Consolas','Color',cdata(iCh,:));
+    end
 end
 
 if strlength(options.Title) > 0
@@ -46,7 +51,7 @@ if strlength(options.Title) > 0
         'FontName','Tahoma','Color','k');
 else
     title(L, sprintf('%s: %04d-%02d-%02d | Sweep-%d | Block-%d', ...
-        options.Subject, options.Year, options.Month, options.Day, options.Sweep, options.Block), ...
+        strrep(options.Subject,'_','\_'), options.Year, options.Month, options.Day, options.Sweep, options.Block), ...
         'FontName','Tahoma','Color','k');
 end
 if strlength(options.Subtitle) > 0

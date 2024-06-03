@@ -36,6 +36,7 @@ arguments
     options.Block (1,1) double {mustBeInteger} = 0;
     options.ResponseThreshold (1,1) double {mustBePositive} = 20.0;
     options.FigurePosition = [100 300 900 420];
+    options.Muscle (:,1) string = "";
 end
 fig = figure('Color', 'w', 'Name', 'BoxPlot of Channelwise Responses',...
     'Position',options.FigurePosition);
@@ -56,6 +57,9 @@ response = response_data;
 response(:,~iResponse) = nan;
 boxchart(ax,no_response);
 boxchart(ax, response);
+if numel(options.Muscle) == size(response,2)
+    set(ax,'XTickLabel',options.Muscle);
+end
 yline(ax, options.ResponseThreshold, 'k--', ...
     'LineWidth', 1.5, ...
     'Label', 'Response Threshold', ...

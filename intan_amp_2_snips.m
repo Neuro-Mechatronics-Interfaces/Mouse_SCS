@@ -79,8 +79,8 @@ for ii = 1:N
     for iCh = 1:nCh
         samples = data(iCh,:);
         snips{ii}(:,iCh,:) = samples(mask);
-        response_raw{ii}(:,iCh) = squeeze(mean(snips{ii}(iResponse,iCh,:).^2,1));
-        response_normed{ii}(:,iCh) = response_raw{ii}(:,iCh) ./ squeeze(mean(snips{ii}(iBaseline,iCh,:).^2,1));
+        response_raw{ii}(:,iCh) = squeeze(mean(sqrt(snips{ii}(iResponse,iCh,:).^2),1));
+        response_normed{ii}(:,iCh) = response_raw{ii}(:,iCh) ./ squeeze(mean(sqrt(snips{ii}(iBaseline,iCh,:).^2),1));
     end
     if options.Verbose
         fprintf(1,'\n -- Snips (%d / %d) indexed (Total: %5.2f seconds) -- \n\n', ii, N, round(toc(snipsTimerTic),2));
