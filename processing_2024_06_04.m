@@ -11,7 +11,7 @@ YYYY = 2024;
 MM = 6;
 DD = 4;
 % SWEEP = [0,13,11,12];
-SWEEP = 0;
+SWEEP = 61;
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
 EXPORT_DATA_ROOT = parameters('local_export_folder');
@@ -19,8 +19,8 @@ EXPORT_DATA_ROOT = parameters('local_export_folder');
 % % % Parameters for response estimation % % %
 DIG_IN_SYNC_CHANNEL_NUMBER = 2; % Index of DIG_IN connector used for stim onset sync signals
 TLIM_SNIPPETS = [-0.002, 0.006]; % Seconds (for signal indexing, relative to each stim onset)
-TLIM_RESPONSE = [0.002, 0.004]; % Seconds (for estimating power in evoked signal, relative to stim onset)
-TLIM_BASELINE = [-0.002, 0.000]; % Seconds (for normalizing responses, relative to stim onset)
+TLIM_RESPONSE = [0.001, 0.003]; % Seconds (for estimating power in evoked signal, relative to stim onset)
+TLIM_BASELINE = [-0.002, -0.001]; % Seconds (for normalizing responses, relative to stim onset)
 
 % % % Powerpoint Deck exporter % % %
 pptx = exportToPPTX('', ...

@@ -1,5 +1,17 @@
 # MOUSE_SCS #  
-Should really be NHP_ACUTE_DRGS but who keeps track?  
+For mouse SCS procedures.  
+
+## Quick Start ##
+Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_03"`:  
+1. Start Intan RHX software. Select 20kHz for sample rate.  
+2. In RHX UI, click `File > Load Settings` and select `Mouse_SCS.xml`.  
+3. In RHX UI, click `Network > Remote TCP Control`, set Host to `127.0.0.1` and click `Connect`.  
+4. In MATLAB, navigate to `C:/MyRepos/NML/Mouse_SCS`.  
+5. Open `experiment_2024_06_04.m` and click `Run` from the `Editor` tab in the UI.  
+6. Open `processing_2024_06_04.m`. 
+7. Enter experimental parameters and click `RUN` from the stimulation controller GUI.  
+8. After each sweep, update the `SWEEP` constant at the top of `processing_2024_06_04.m` and then click `Run` from the `Editor` tab in the UI.  
+  + This should generate a new Powerpoint for each sweep with the stimulus response curves, on the Google Drive mapped in `parameters.m`.   
 
 ## Contents ##  
 * [Configuration](#important)

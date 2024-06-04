@@ -14,7 +14,7 @@ arguments
     options.Intensity (:,1) double = 100;  % Amplitude of biphasic pulses (uA) 
     options.Frequency (:,1) double = 1;    % Within-burst frequency (Hz)
     options.PulseWidth (:,1) double = 200; % Microseconds for minimum pulse width
-    options.PostBurstBuffer (1,1) double = 2.5; % (seconds)
+    options.PostBurstBuffer (1,1) double = 1.25; % (seconds)
     options.BurstDuration (1,1) double = 0.5; % (seconds) width of each burst in time, which determines the total number of pulses based on Frequency (rounding up)
     options.PulsesPerBurst (1,1) double = nan; % Specify as scalar to fix the number of pulses per burst instead of setting burst by duration (which is the default)
     options.PulseReductionFactor (1,1) double = 1; % Amount to scale down/widen the second phase by
@@ -97,6 +97,7 @@ for ii = 1:nTotalLevels
     AM4100_setStimParameters(am4100, logger, ...
         amp, pw, ...
         -amp / options.PulseReductionFactor, pw * options.PulseReductionFactor, ...
+        ... 0, pw, ...
         'PulsePeriod', pulse_period, ...
         'PulsesPerBurst', n_pulses(ii),  ...
         'PostBurstBuffer', options.PostBurstBuffer, ...
@@ -157,24 +158,24 @@ if ~isempty(client)
     save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T', '-v7.3');
     
     % Parse metadata overview and make a summary spreadsheet/file as well
-    overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
-    if exist(overview_file,'file')==0
-        S = [];
-    else
-        S = readtable(overview_file);
-    end
-    Sweep = client.UserData.sweep;
-    Stim_Channel = T.channel(1);
-    Return_Channel = T.return_channel(1);
-    Min_Intensity = min(T.intensity);
-    Max_Intensity = max(T.intensity);
-    all_intensity_asc = sort(unique(T.intensity),'ascend');
-    Intensity_Step = mode(diff(all_intensity_asc));
-    Min_Frequency = min(T.frequency);
-    Max_Frequency = max(T.frequency);
-    S = [S; table(Sweep, Stim_Channel, Return_Channel, Min_Intensity, Max_Intensity, Intensity_Step, Min_Frequency, Max_Frequency)];
-    writetable(S, overview_file);
-    save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
+%     overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
+%     if exist(overview_file,'file')==0
+%         S = [];
+%     else
+%         S = readtable(overview_file);
+%     end
+%     Sweep = client.UserData.sweep;
+%     Stim_Channel = T.channel(1);
+%     Return_Channel = T.return_channel(1);
+%     Min_Intensity = min(T.intensity);
+%     Max_Intensity = max(T.intensity);
+%     all_intensity_asc = sort(unique(T.intensity),'ascend');
+%     Intensity_Step = mode(diff(all_intensity_asc));
+%     Min_Frequency = min(T.frequency);
+%     Max_Frequency = max(T.frequency);
+%     S = [S; table(Sweep, Stim_Channel, Return_Channel, Min_Intensity, Max_Intensity, Intensity_Step, Min_Frequency, Max_Frequency)];
+%     writetable(S, overview_file);
+%     save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
 
     client.UserData.sweep = client.UserData.sweep + 1;
     client.UserData.block = 0;

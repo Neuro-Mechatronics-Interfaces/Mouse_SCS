@@ -31,8 +31,10 @@ for iT = 1:size(TID,1)
         'UserData', struct('Title', "", 'Subtitle', "", 'Frequency', []));
     L = tiledlayout(fig(iT), 'flow');
     Tsub = sortrows(T(T.frequency == TID.frequency(iT),:),'intensity','ascend');
-    snip_data = cat(3,snips{Tsub.block+1});
-    n_snips = cellfun(@(C)size(C,3),snips(Tsub.block+1));
+    index = Tsub.block+1;
+%     index = Tsub.block;
+    snip_data = cat(3,snips{index});
+    n_snips = cellfun(@(C)size(C,3),snips(index));
     nResponses = size(snip_data,3);
     yOffset = 0:options.YOffset:(options.YOffset*(nResponses-1));
     if isempty(options.CMapData)
