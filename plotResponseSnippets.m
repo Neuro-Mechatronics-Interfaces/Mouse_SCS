@@ -45,7 +45,12 @@ for iT = 1:size(TID,1)
         ax = nexttile(L);
         [G_intensity,uG] = findgroups(Tsub.intensity);
         G_intensity = repelem(G_intensity,n_snips,1);
-        cdata_cur = flipud(cm.umap(cdata(iCh,:),numel(uG)+6));
+        if rem(numel(uG),2)==1
+            nCol = numel(uG)+8;
+        else
+            nCol = numel(uG)+9;
+        end
+        cdata_cur = flipud(cm.umap(cdata(iCh,:),nCol));
         cdata_cur([1,2,(end-3):end],:) = [];
         cdata_cur = double(cdata_cur(G_intensity,:))./255.0;
         set(ax,'NextPlot','add',...

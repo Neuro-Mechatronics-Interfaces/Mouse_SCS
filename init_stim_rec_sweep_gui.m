@@ -8,7 +8,7 @@ arguments
     options.SWEEP (1,1) {mustBeInteger} = 0;
     options.STIM_CHANNEL (1,1) {mustBeInteger} = 1;
     options.STIM_RETURN (1,1) {mustBeMember(options.STIM_RETURN,["X","L","R"])} = "X";
-    options.INTENSITIES (1,:) double = 20:20:200;
+    options.INTENSITIES (1,:) double = 30:30:300;
     options.FREQUENCIES (1,:) double = [1, 10, 40, 100];
     options.BURST_DURATION (1,1) double = 0.2;
     options.BURST_REPETITIONS (1,1) {mustBeInteger} = 5;

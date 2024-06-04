@@ -151,10 +151,31 @@ if ~isempty(client)
         client.UserData.subject, client.UserData.year, ...
         client.UserData.month, client.UserData.day);
     sweep_folder = sprintf('%s_%d', tank, client.UserData.sweep);
-    save_folder = fullfile(options.RawDataRoot, ...
-        client.UserData.subject, tank, sweep_folder);
+    subject_folder = fullfile(options.RawDataRoot, client.UserData.subject);
+    save_folder = fullfile(subject_folder, tank, sweep_folder);
     writetable(T, fullfile(save_folder, sprintf('%s.xlsx', sweep_folder)));
     save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T', '-v7.3');
+    
+    % Parse metadata overview and make a summary spreadsheet/file as well
+    overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
+    if exist(overview_file,'file')==0
+        S = [];
+    else
+        S = readtable(overview_file);
+    end
+    Sweep = client.UserData.sweep;
+    Stim_Channel = T.channel(1);
+    Return_Channel = T.return_channel(1);
+    Min_Intensity = min(T.intensity);
+    Max_Intensity = max(T.intensity);
+    all_intensity_asc = sort(unique(T.intensity),'ascend');
+    Intensity_Step = mode(diff(all_intensity_asc));
+    Min_Frequency = min(T.frequency);
+    Max_Frequency = max(T.frequency);
+    S = [S; table(Sweep, Stim_Channel, Return_Channel, Min_Intensity, Max_Intensity, Intensity_Step, Min_Frequency, Max_Frequency)];
+    writetable(S, overview_file);
+    save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
+
     client.UserData.sweep = client.UserData.sweep + 1;
     client.UserData.block = 0;
 end
