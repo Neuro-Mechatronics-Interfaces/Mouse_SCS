@@ -10,8 +10,12 @@ SUBJ = "Pilot_SCS_N_CEJ_02";
 YYYY = 2024;
 MM = 6;
 DD = 2;
-SWEEP = [0,13,11,12];
-SIDE = ["L","L","R","L"];
+% SWEEP = [0,13,11,12];
+% SIDE = ["L","L","R","L"];
+% SWEEP = [4,5,6,7,8,9,10];
+% SIDE = ["L","R","R","R","L","L","R"];
+SWEEP = 4;
+SIDE = "L";
 RAW_DATA_ROOT = "C:/Data/SCS";
 EXPORT_DATA_ROOT = parameters('local_export_folder');
 
