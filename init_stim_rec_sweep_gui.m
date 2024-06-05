@@ -10,11 +10,11 @@ arguments
     options.STIM_RETURN (1,1) {mustBeMember(options.STIM_RETURN,["X","L","R"])} = "X";
     options.INTENSITIES (1,:) double = 30:30:300;
     options.FREQUENCIES (1,:) double = [1, 10, 40, 100];
+    options.PULSE_WIDTH (1,1) double = 200;
     options.BURST_DURATION (1,1) double = 0.2;
     options.BURST_REPETITIONS (1,1) {mustBeInteger} = 5;
     options.RAW_DATA_ROOT = "";
 end
-
 
 fig = uifigure('Name', 'Mouse SCS Stim/Rec Controller', ...
     'Color', 'k', 'Units', 'inches', ...
@@ -32,7 +32,7 @@ else
     raw_root = options.RAW_DATA_ROOT;
 end
 
-L = uigridlayout(fig,[12,2],'BackgroundColor','k','ColumnWidth',{'1x','4x'});
+L = uigridlayout(fig,[13,2],'BackgroundColor','k','ColumnWidth',{'1x','4x'});
 lab = uilabel(L,"Text","SWEEP",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
 lab.Layout.Row = 1;
 lab.Layout.Column = 1;
@@ -120,17 +120,45 @@ fig.UserData.RepetitionsSpinBox = uispinner(L, ...
 fig.UserData.RepetitionsSpinBox.Layout.Row = 8;
 fig.UserData.RepetitionsSpinBox.Layout.Column = 2;
 
-lab = uilabel(L,"Text","Save Folder",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
+lab = uilabel(L,"Text","Width (μs)",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
 lab.Layout.Row = 9;
+lab.Layout.Column = 1;
+fig.UserData.PulseWidthSpinBox = uispinner(L, ...
+    "FontName","Consolas",...
+    "Value",options.PULSE_WIDTH, ...
+    "LowerLimitInclusive","on",...
+    "UpperLimitInclusive","on",...
+    "Step",50,...
+    "RoundFractionalValues","on",...
+    "Limits",[50,1000]);
+fig.UserData.PulseWidthSpinBox.Layout.Row = 9;
+fig.UserData.PulseWidthSpinBox.Layout.Column = 2;
+
+lab = uilabel(L,"Text","Monophasic",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
+lab.Layout.Row = 10;
+lab.Layout.Column = 1;
+fig.UserData.Monophasic = uicheckbox(L, 'Value', 0, 'Tooltip', "Set checked to only deliver monophasic pulses.");
+fig.UserData.Monophasic.Layout.Row = 10;
+fig.UserData.Monophasic.Layout.Column = 2;
+
+lab = uilabel(L,"Text","Cathodal",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
+lab.Layout.Row = 11;
+lab.Layout.Column = 1;
+fig.UserData.Monophasic = uicheckbox(L, 'Value', 1, 'Tooltip', "Set checked if pulses are cathodal-leading.");
+fig.UserData.Monophasic.Layout.Row = 11;
+fig.UserData.Monophasic.Layout.Column = 2;
+
+lab = uilabel(L,"Text","Save Folder",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
+lab.Layout.Row = 12;
 lab.Layout.Column = 1;
 fig.UserData.SaveFolderEditField = uieditfield(L, 'text', ...
     "FontName","Consolas",...
     "Value",raw_root);
-fig.UserData.SaveFolderEditField.Layout.Row = 9;
+fig.UserData.SaveFolderEditField.Layout.Row = 12;
 fig.UserData.SaveFolderEditField.Layout.Column = 2;
 
 fig.UserData.RunButton = uibutton(L,"BackgroundColor",'r',"FontColor",'w',"FontWeight",'bold',"FontName","Tahoma","Text","RUN",'ButtonPushedFcn',@execute_stim_rec_sweep);
-fig.UserData.RunButton.Layout.Row = 12;
+fig.UserData.RunButton.Layout.Row = 13;
 fig.UserData.RunButton.Layout.Column = 2;
 
     function execute_stim_rec_sweep(src,~)
@@ -148,7 +176,10 @@ fig.UserData.RunButton.Layout.Column = 2;
             'Return', u.ReturnDropDown.Value, ...
             'Intensity', iVal, ...
             'Frequency', fVal, ...
+            'Monophasic', u.Monophasic.Value==1, ...
+            'CathodalLeading', u.CathodalLeading.Value==1,...
             'BurstDuration', u.BurstDurationEditField.Value, ...
+            'PulseWidth', u.PulseWidthSpinBox.Value, ...
             'NBursts', u.RepetitionsSpinBox.Value, ...
             'RawDataRoot', u.SaveFolderEditField.Value, ...
             'BlockUpdateHandle', u.BlockSpinBox, ...

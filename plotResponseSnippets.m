@@ -1,4 +1,4 @@
-function fig = plotResponseSnippets(t, snips, channel, T, options)
+function [fig, cdata] = plotResponseSnippets(t, snips, channel, T, options)
 %PLOTRESPONSESNIPPETS  Plot snippet response squiggles
 %
 % Syntax:
@@ -21,7 +21,11 @@ arguments
     options.CMapData = [];
     options.Muscle (:,1) string = ""
 end
-
+if isempty(options.CMapData)
+    cdata = jet(numel(channel));
+else
+    cdata = options.CMapData;
+end
 [~,TID] = findgroups(T(:,["frequency","pulse_width","channel"]));
 fig = gobjects(size(TID,1),1);
 for iT = 1:size(TID,1)
@@ -37,11 +41,7 @@ for iT = 1:size(TID,1)
     n_snips = cellfun(@(C)size(C,3),snips(index));
     nResponses = size(snip_data,3);
     yOffset = 0:options.YOffset:(options.YOffset*(nResponses-1));
-    if isempty(options.CMapData)
-        cdata = jet(numel(channel));
-    else
-        cdata = options.CMapData;
-    end
+    
 
     for iCh = 1:numel(channel)
         ax = nexttile(L);
@@ -50,7 +50,7 @@ for iT = 1:size(TID,1)
         if rem(numel(uG),2)==1
             nCol = numel(uG)+8;
         else
-            nCol = numel(uG)+9;
+            nCol = numel(uG)+9; set
         end
         cdata_cur = flipud(cm.umap(cdata(iCh,:),nCol));
         cdata_cur([1,2,(end-3):end],:) = [];

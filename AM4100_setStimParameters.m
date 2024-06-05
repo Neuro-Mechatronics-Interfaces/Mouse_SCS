@@ -13,6 +13,7 @@ arguments
     options.InterPhaseInterval (1,1) double {mustBeInteger, mustBeGreaterThanOrEqual(options.InterPhaseInterval, 0)} = 50; % Microseconds between phases
     options.PostBurstBuffer (1,1) double = 2.5;
     options.NBursts (1,1) double {mustBeInteger, mustBePositive} = 1;
+    options.Monophasic (1,1) logical = false;
 end
 
 if sign(A2) == sign(A1)
@@ -63,34 +64,54 @@ if am4100.UserData.enable
         'NBursts', options.NBursts);
     
     % % % Configure the Event parameters % % %
-    [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 2'); % set menu=Library1:Type:Asymm
-    if ~isempty(logger)
-        logger.info(sprintf('sent = %s', inputStr));
-        logger.info(sprintf('reply = %s', rplStr));
-    end
-    
-    [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 6 %d', D1)); % set menu=Library1:Duration1: 0.2ms
-    if ~isempty(logger)
-        logger.info(sprintf('sent = %s', inputStr));
-        logger.info(sprintf('reply = %s', rplStr));
-    end
-    
-    AM4100_setInterPhaseInterval(am4100, logger, options.InterPhaseInterval); % 50-microsecond inter-phase interval
-    
-    [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 9 %d', D2)); % set menu=Library1:Dur2:0.8 ms
-    if ~isempty(logger)
-        logger.info(sprintf('sent = %s', inputStr));
-        logger.info(sprintf('reply = %s', rplStr));
-    end
-    [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 7 %d', A1)); % set menu=Library1:Amplitude1 1mA
-    if ~isempty(logger)
-        logger.info(sprintf('sent = %s', inputStr));
-        logger.info(sprintf('reply = %s', rplStr));
-    end
-    [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 10 %d', A2)); % set menu=Library1:Amplitude2 -250uA
-    if ~isempty(logger)
-        logger.info(sprintf('sent = %s', inputStr));
-        logger.info(sprintf('reply = %s', rplStr));
+    if options.Monophasic
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 0'); % set menu=Library1:Type:Mono
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+        
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 6 %d', D1)); % set menu=Library1:Duration1: 0.2ms
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 7 %d', A1)); % set menu=Library1:Amplitude1 1mA
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+    else
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s m 10 2 2'); % set menu=Library1:Type:Asymm
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+        
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 6 %d', D1)); % set menu=Library1:Duration1: 0.2ms
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+        
+        AM4100_setInterPhaseInterval(am4100, logger, options.InterPhaseInterval); % 50-microsecond inter-phase interval
+        
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 9 %d', D2)); % set menu=Library1:Dur2:0.8 ms
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 7 %d', A1)); % set menu=Library1:Amplitude1 1mA
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
+        [rplStr,inputStr]=AM4100_sendCommand(am4100,sprintf('1001 s m 10 10 %d', A2)); % set menu=Library1:Amplitude2 -250uA
+        if ~isempty(logger)
+            logger.info(sprintf('sent = %s', inputStr));
+            logger.info(sprintf('reply = %s', rplStr));
+        end
     end
     % % % Set the stimulator ready to run % % %
     [rplStr,inputStr]=AM4100_sendCommand(am4100,'1001 s a run');    % When you are done changing values RUN

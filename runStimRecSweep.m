@@ -5,6 +5,7 @@ arguments
     am4100
     logger
     options.CathodalLeading (1,1) logical = true; 
+    options.Monophasic (1,1) logical = false;
     options.Channel (1,1) {mustBeMember(options.Channel,1:8)} = 1;
     options.Return (1,1) {mustBeMember(options.Return,["X","L","R"])} = "X";
     options.DelayAfterSettingParameters (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterSettingParameters,0)} = 0.5; % 
@@ -97,7 +98,7 @@ for ii = 1:nTotalLevels
     AM4100_setStimParameters(am4100, logger, ...
         amp, pw, ...
         -amp / options.PulseReductionFactor, pw * options.PulseReductionFactor, ...
-        ... 0, pw, ...
+        'Monophasic', options.Monophasic, ...
         'PulsePeriod', pulse_period, ...
         'PulsesPerBurst', n_pulses(ii),  ...
         'PostBurstBuffer', options.PostBurstBuffer, ...
@@ -158,24 +159,27 @@ if ~isempty(client)
     save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T', '-v7.3');
     
     % Parse metadata overview and make a summary spreadsheet/file as well
-%     overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
-%     if exist(overview_file,'file')==0
-%         S = [];
-%     else
-%         S = readtable(overview_file);
-%     end
-%     Sweep = client.UserData.sweep;
-%     Stim_Channel = T.channel(1);
-%     Return_Channel = T.return_channel(1);
-%     Min_Intensity = min(T.intensity);
-%     Max_Intensity = max(T.intensity);
-%     all_intensity_asc = sort(unique(T.intensity),'ascend');
-%     Intensity_Step = mode(diff(all_intensity_asc));
-%     Min_Frequency = min(T.frequency);
-%     Max_Frequency = max(T.frequency);
-%     S = [S; table(Sweep, Stim_Channel, Return_Channel, Min_Intensity, Max_Intensity, Intensity_Step, Min_Frequency, Max_Frequency)];
-%     writetable(S, overview_file);
-%     save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
+    overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
+    if exist(overview_file,'file')==0
+        S = [];
+    else
+        S = readtable(overview_file);
+    end
+    s = table('Size',[1 8],'VariableTypes',{'double','double','string','double','double','double','double','double'},...
+        'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency'});
+
+    s.Sweep = client.UserData.sweep;
+    s.Stim_Channel = T.channel(1);
+    s.Return_Channel = T.return_channel(1);
+    s.Min_Intensity = min(T.intensity);
+    s.Max_Intensity = max(T.intensity);
+    all_intensity_asc = sort(unique(T.intensity),'ascend');
+    s.Intensity_Step = mode(diff(all_intensity_asc));
+    s.Min_Frequency = min(T.frequency);
+    s.Max_Frequency = max(T.frequency);
+    S = [S; s];
+    writetable(S, overview_file);
+    save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
 
     client.UserData.sweep = client.UserData.sweep + 1;
     client.UserData.block = 0;
