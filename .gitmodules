@@ -19,3 +19,6 @@
 [submodule "+cm"]
 	path = +cm
 	url = https://github.com/Neuro-Mechatronics-Interfaces/matlab_package__cm.git
+[submodule "+plot"]
+	path = +plot
+	url = git@github.com:Neuro-Mechatronics-Interfaces/MATLAB_Data_Plots.git
