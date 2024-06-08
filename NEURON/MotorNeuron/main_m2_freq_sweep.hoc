@@ -113,12 +113,14 @@ vvec.record(&soma.v(0.5))
 
 freq = 10
 m2_cur = 0.5
+leak_cur = 0.0
 w0 = 1
 w1 = 1
 w2 = 1
 
 // Function to run the simulation and record voltage
 proc run_simulation() {
+    soma.gl_motoneuron_m2 = leak_cur // Set the leak level
     soma.m2_modulation_motoneuron_m2 = m2_cur // Set the m2 modulation level
     stim0.interval = 3000 / freq // Set the stimulation frequency
     stim0.number = freq
@@ -142,7 +144,11 @@ proc run_simulation() {
 }
 
 // Sweep through frequencies
-objref m2_levels, frequencies, w0_levels, w1_levels, w2_levels
+objref m2_levels, leak_levels, frequencies, w0_levels, w1_levels, w2_levels
+leak_levels = new Vector() // 3 leak current levels
+leak_levels.append(0.000) // no leak
+leak_levels.append(0.002) // from Capogrosso/Formento model 2016
+leak_levels.append(0.007) // from Grill model 2002
 m2_levels = new Vector() // 3 modulation levels
 m2_levels.append(0.1)
 m2_levels.append(1.0)
@@ -180,37 +186,10 @@ w1_levels.append(30)
 w2_levels.append(10)
 
 // Takes ~1 minute to process 18 simulation runs at dt = 0.025 and tstop = 1000. 
-// --> ~2 minutes to complete all frequencies/weight-levels for a single m2 level
-// ----> ~6 minutes for a full simulation run.
+// --> ~2 minutes to complete all frequencies/weight-levels for a single m2/leak level
+// ----> ~18 minutes for a full simulation run.
 
-objref vout, tout
-for c = 0, w2_levels.size()-1 {
-	for k = 0, m2_levels.size()-1 {
-		m2_cur = m2_levels.x[k]
-		for i = 0, frequencies.size()-1 {
-			freq = frequencies.x[i]
-			w0 = w0_levels.x[c]
-			w1 = w1_levels.x[c]
-			w2 = w2_levels.x[c]
-			run_simulation()
-			// Save the recorded voltage data to a file
-			strdef filename_voltage, filename_time
-			sprint(filename_voltage, "out/voltage_%g_%g_%g_%gm2_%dHz.dat", w0, w1, w2, m2_cur, freq)
-			sprint(filename_time, "out/time_%g_%g_%g_%gm2_%dHz.dat", w0, w1, w2, m2_cur, freq) 
-			vout = new File()
-			vout.wopen(filename_voltage) // Overwrite mode (recreate the file each time)
-			vvec.printf(vout, "%g\n")
-			vout.close()
-			// Save recorded times to a file
-			tout = new File()
-			tout.wopen(filename_time) // Write mode (create/overwrite file)
-			tvec.printf(tout, "%g\n")
-			tout.close()
-		}
-	}
-}
-
-objref frout, m2out
+objref frout, m2out, leakout
 proc save_metadata() {
 	frout = new File()
 	frout.wopen("out/frequencies.dat")
@@ -220,8 +199,44 @@ proc save_metadata() {
 	m2out.wopen("out/m2_levels.dat")
 	m2_levels.printf(m2out, "%g\n")
 	m2out.close()
+	leakout = new File()
+	leakout.wopen("out/leak_levels.dat")
+	leak_levels.printf(leakout, "%g\n")
+	leakout.close()
 }
 
 save_metadata()
+
+objref vout, tout
+for c = 0, w2_levels.size()-1 {
+	for l = 0, leak_levels.size()-1 {
+		leak_cur = leak_levels.x[l]
+		for k = 0, m2_levels.size()-1 {
+			m2_cur = m2_levels.x[k]
+			for i = 0, frequencies.size()-1 {
+				freq = frequencies.x[i]
+				w0 = w0_levels.x[c]
+				w1 = w1_levels.x[c]
+				w2 = w2_levels.x[c]
+				run_simulation()
+				// Save the recorded voltage data to a file
+				strdef filename_voltage, filename_time
+				sprint(filename_voltage, "out/voltage_%g_%g_%g_%ggl_%gm2_%dHz.dat", w0, w1, w2, leak_cur, m2_cur, freq)
+				sprint(filename_time, "out/time_%g_%g_%g_%ggl_%gm2_%dHz.dat", w0, w1, w2, leak_cur, m2_cur, freq) 
+				vout = new File()
+				vout.wopen(filename_voltage) // Overwrite mode (recreate the file each time)
+				vvec.printf(vout, "%g\n")
+				vout.close()
+				// Save recorded times to a file
+				tout = new File()
+				tout.wopen(filename_time) // Write mode (create/overwrite file)
+				tvec.printf(tout, "%g\n")
+				tout.close()
+			}
+		}
+	}
+}
+
+
 
 quit()

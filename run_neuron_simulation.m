@@ -1,5 +1,18 @@
 function run_neuron_simulation(sim_name, options)
 %RUN_NEURON_SIMULATION  Run the NEURON simulation from MATLAB. 
+%
+% Syntax:
+%   run_neuron_simulation();
+%   run_neuron_simulation('sim_name.hoc');
+%   run_neuron_simulation('sim_name.hoc','Name', value, ...);
+%
+% Options:
+%   'SimulationFolder' = fullfile(pwd,"NEURON/MotorNeuron");
+%   'TERMINAL_COMMAND' = "C:\Windows\System32\cmd.exe /c";
+%   'NEURON_HOME' = "C:/nrn/bin"; 
+%
+% See also: example_load_plot_export_m2_simulations.m
+
 arguments
     sim_name {mustBeTextScalar} = 'main_m2_freq_sweep.hoc';
     options.SimulationFolder = fullfile(pwd,"NEURON/MotorNeuron");
