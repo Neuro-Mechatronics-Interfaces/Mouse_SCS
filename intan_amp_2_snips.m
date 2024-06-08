@@ -1,8 +1,8 @@
-function [snips, t, response_normed, response_raw, filtering, data] = intan_amp_2_snips(intan, options)
+function [snips, t, response, blip, filtering, data] = intan_amp_2_snips(intanData, options)
 %INTAN_AMP_2_SNIPS  Returns snippets cell arrays of response tensors (and optionally, second output as struct with filtering parameters).
 %
 % Syntax:
-%   [snips, t, response_normed, response_raw, filtering] = intan_amp_2_snips(intan, 'Name', value, ...);
+%   [snips, t, response, blip, filtering, data] = intan_amp_2_snips(intanData, 'Name', value, ...);
 %
 % Inputs:
 %   intan - Struct or array of structs containing amplifier_data from Intan
@@ -24,12 +24,13 @@ function [snips, t, response_normed, response_raw, filtering, data] = intan_amp_
 % See also: Contents, filter_intan_amplifier_data
 
 arguments
-    intan (:,1) struct
+    intanData (:,1) struct
     options.ApplyFiltering (1,1) logical = true;
     options.FilterParameters cell = {};
     options.TLim (1,2) double = [-0.002, 0.010]; % Seconds around each rising edge
-    options.TLimBaseline (1,2) double = [-0.002, 0.000]; % Window in which to estimate the baseline
-    options.TLimResponse (1,2) double = [0.003, 0.008]; % Window in which to estimate response power
+    % options.TLimResponse (:,2) double = [0.0015, 0.0025]; % Window in which to estimate response power
+    options.Muscle (:,1) string = repmat("NONE",16,1);
+    options.MuscleResponseTimesFile {mustBeTextScalar} = "Muscle_Response_Times.xlsx";
     options.DigInSyncChannel (1,1) {mustBePositive, mustBeInteger} = 2;
     options.SyncDebounce (1,1) double = 0.005;
     options.Verbose (1,1) logical = true;
@@ -37,33 +38,35 @@ end
 if options.Verbose
     snipsTimerTic = tic;
 end
-snips = cell(size(intan));
-response_normed = cell(size(intan));
-response_raw = cell(size(intan));
-N = numel(intan);
+tResponse = load_muscle_response_times(options.Muscle, 'CalibrationFile', options.MuscleResponseTimesFile);
+if size(tResponse,1)~=size(intanData(1).amplifier_data,1)
+    error("Mismatch in number of muscles mapped vs. number of amplifier channels. Either change acquisition settings or fix mapping...");
+end
+snips = cell(size(intanData));
+blip = cell(size(intanData));
+response = cell(size(intanData));
+N = numel(intanData);
 for ii = 1:N
     if ii == 1 % Get the relative snippet samples only from the first element in the array. Rest should have same sample rate, or something is majorly fucked up.
-        fs = intan(ii).frequency_parameters.amplifier_sample_rate;
+        fs = intanData(ii).frequency_parameters.amplifier_sample_rate;
         t = options.TLim(1):(1/fs):options.TLim(2);
         iVec = reshape(unique(round(t .* fs)),[],1); % Column vector: rows are relative time-samples to stimuli
-        iBaseline = (t >= options.TLimBaseline(1)) & (t < options.TLimBaseline(2));
-        iResponse = (t >= options.TLimResponse(1)) & (t < options.TLimResponse(2));
     end
-    rising = parse_sync_from_intan(intan(ii).t_dig, intan(ii).board_dig_in_data(options.DigInSyncChannel,:), 'Debounce', options.SyncDebounce);
+    rising = parse_sync_from_intan(intanData(ii).t_dig, intanData(ii).board_dig_in_data(options.DigInSyncChannel,:), 'Debounce', options.SyncDebounce);
     mask = iVec + rising;
-    i_remove = any((mask < 1) | (mask > size(intan(ii).amplifier_data,2)), 1);
+    i_remove = any((mask < 1) | (mask > size(intanData(ii).amplifier_data,2)), 1);
     mask(:,i_remove) = [];
     rising(i_remove) = [];
     
     if (ii == 1)
-        [data, filtering] = filter_intan_amplifier_data(intan(ii).amplifier_data, ...
+        [data, filtering] = filter_intan_amplifier_data(intanData(ii).amplifier_data, ...
             'ArtifactOnset', rising, ...
             'SampleRate', fs, ...
             'ApplyFiltering', options.ApplyFiltering, ...
             'Verbose', options.Verbose, ...
             options.FilterParameters{:});
     else
-        data = filter_intan_amplifier_data(intan(ii).amplifier_data, ...
+        data = filter_intan_amplifier_data(intanData(ii).amplifier_data, ...
             'ArtifactOnset', rising, ...
             'SampleRate', fs, ...
             'ApplyFiltering', options.ApplyFiltering, ...
@@ -75,14 +78,16 @@ for ii = 1:N
     nCh = size(data,1);     % # Amplifier channels
     nStims = numel(rising); % # Stimulus pulses with valid indexing
     snips{ii} = nan(nTs, nCh, nStims);
-    response_raw{ii} = nan(nStims, nCh);
-    response_normed{ii} = nan(nStims, nCh);
+    response{ii} = nan(nStims,nCh);
+    blip{ii} = cell(nCh,1);
     for iCh = 1:nCh
         samples = data(iCh,:);
         snips{ii}(:,iCh,:) = samples(mask);
         snips{ii}(:,iCh,:) = snips{ii}(:,iCh,:)-mean(snips{ii}(1:20,iCh,:),1);
-        response_raw{ii}(:,iCh) = squeeze(mean(sqrt(snips{ii}(iResponse,iCh,:).^2),1));
-        response_normed{ii}(:,iCh) = response_raw{ii}(:,iCh) ./ squeeze(mean(sqrt(snips{ii}(iBaseline,iCh,:).^2),1));
+        [response{ii}(:,iCh),blip{ii}{iCh}] = estimate_recruitment(...
+            t, snips{ii}(:,iCh,:), ...
+            'TStart',tResponse(iCh,1), ...)
+            'TStop', tResponse(iCh,2));   
     end
     if options.Verbose
         fprintf(1,'\n -- Snips (%d / %d) indexed (Total: %5.2f seconds) -- \n\n', ii, N, round(toc(snipsTimerTic),2));

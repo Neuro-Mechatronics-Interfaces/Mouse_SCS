@@ -50,14 +50,14 @@ for iT = 1:size(TID,1)
         if rem(numel(uG),2)==1
             nCol = numel(uG)+8;
         else
-            nCol = numel(uG)+9; set
+            nCol = numel(uG)+9; 
         end
         cdata_cur = flipud(cm.umap(cdata(iCh,:),nCol));
         cdata_cur([1,2,(end-3):end],:) = [];
         cdata_cur = double(cdata_cur(G_intensity,:))./255.0;
         set(ax,'NextPlot','add',...
             'XLim',[t(1), t(end)], ...
-            'YLim',[-options.YOffset, options.YOffset*nResponses], ...
+            'YLim',[-options.YOffset, options.YOffset*(nResponses+2)], ...
             'ColorOrder', cdata_cur, ...
             'FontName','Tahoma','XColor','k','YColor','none');
         plot(ax, t, squeeze(snip_data(:,channel(iCh),:))+yOffset);

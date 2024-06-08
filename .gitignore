@@ -6,3 +6,7 @@
 parameters.m
 logs/
 export/
+
+*.dat
+
+*.o

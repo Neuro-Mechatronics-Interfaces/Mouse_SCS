@@ -13,5 +13,5 @@ if numel(muscle) < 16
 end
 i_remove = strcmpi(muscle,"NONE");
 channel_index(i_remove) = [];
-muscle(i_remove) = [];
+% muscle(i_remove) = [];
 end
