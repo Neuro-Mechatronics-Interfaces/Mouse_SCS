@@ -206,13 +206,13 @@ extern void hoc_reg_nmodl_filename(int, const char*);
 #define amC amC_motoneuron_m2
  double amC = 5;
 #define amB amB_motoneuron_m2
- double amB = 66;
+ double amB = 59;
 #define amA amA_motoneuron_m2
  double amA = 0.4;
 #define bmC bmC_motoneuron_m2
  double bmC = 5;
 #define bmB bmB_motoneuron_m2
- double bmB = 32;
+ double bmB = 31.5;
 #define bmA bmA_motoneuron_m2
  double bmA = 0.4;
 #define ca0 ca0_motoneuron_m2
@@ -329,11 +329,11 @@ static void nrn_alloc(Prop* _prop) {
  	_p = nrn_prop_data_alloc(_mechtype, 45, _prop);
  	/*initialize range parameters*/
  	gnabar = 0.05;
- 	gl = 0.007;
+ 	gl = 0.002;
  	gkrect = 0.3;
- 	gcaN = 0.05;
- 	gcaL = 0.0001;
- 	gcak = 0.3;
+ 	gcaN = 0.001;
+ 	gcaL = 0.0002;
+ 	gcak = 0.01;
  	ena = 50;
  	ek = -80;
  	el = -70;
@@ -778,12 +778,12 @@ static const char* nmodl_file_text =
   "PARAMETER {\n"
   "    :SOMA PARAMETERS\n"
   "    gnabar  = 0.05  (mho/cm2)\n"
-  "    : gl      = 0.002 (mho/cm2) : original value\n"
-  "	gl = 0.007 (mho/cm2) : from Grill 2002 \n"
-  "    gkrect  = 0.3   (mho/cm2)\n"
-  "    gcaN    = 0.05  (mho/cm2)\n"
-  "    gcaL    = 0.0001 (mho/cm2)\n"
-  "    gcak    = 0.3   (mho/cm2)\n"
+  "    gl      = 0.002 (mho/cm2)\n"
+  "	gkrect = 0.3 (mho/cm2)\n"
+  "    gcaN    = 0.001  (mho/cm2)\n"
+  "    gcaL    = 0.0002 (mho/cm2)\n"
+  "    : gcak    = 0.3   (mho/cm2) : original\n"
+  "	gcak = 0.01 (mho/cm2)\n"
   "    ca0     = 2  \n"
   "    ena     = 50.0  (mV)\n"
   "    ek      = -80.0 (mV)\n"
@@ -791,10 +791,10 @@ static const char* nmodl_file_text =
   "    dt              (ms)\n"
   "    v               (mV)\n"
   "    amA = 0.4\n"
-  "    amB = 66\n"
+  "    amB = 59\n"
   "    amC = 5\n"
   "    bmA = 0.4\n"
-  "    bmB = 32\n"
+  "    bmB = 31.5\n"
   "    bmC = 5\n"
   "    R=8.314472 : Universal gas constant (J / mol*K)\n"
   "    F=96485.34 : Faraday constant (C / mol)\n"
@@ -886,7 +886,7 @@ static const char* nmodl_file_text =
   "    hc_inf = 1 / (1 + Exp((v + 50) / 5))\n"
   "\n"
   "    :L-type\n"
-  "    tau_p = 400\n"
+  "    tau_p = 400 : original\n"
   "    p_inf = 1 / (1 + Exp(-(v + 55.8) / 3.7))\n"
   "}\n"
   "\n"

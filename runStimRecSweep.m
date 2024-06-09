@@ -7,7 +7,7 @@ arguments
     options.CathodalLeading (1,1) logical = true; 
     options.Monophasic (1,1) logical = false;
     options.Channel (1,1) {mustBeMember(options.Channel,1:8)} = 1;
-    options.Return (1,1) {mustBeMember(options.Return,["X","L","R"])} = "X";
+    options.Return (1,1) {mustBeMember(options.Return,["?","L","R","X1","X2","X3","X4","X5","X6","X7","X8","X9"])} = "?";
     options.DelayAfterSettingParameters (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterSettingParameters,0)} = 0.5; % 
     options.DelayAfterRunCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRunCommand, 0)} = 0.025;
     options.DelayAfterNameCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterNameCommand, 0)} = 0.025; 
@@ -142,7 +142,22 @@ for ii = 1:nTotalLevels
     end
 end
 
-T = table(sweep, block, channel, return_channel, intensity, frequency, pulse_width, n_pulses);
+is_monophasic = repmat(options.Monophasic, nTotalLevels,1);
+is_cathodal_leading = repmat(options.CathodalLeading, nTotalLevels, 1);
+T = table('Size',[nTotalLevels 10],'VariableTypes',{'double','double','string','double','double','double','double','double'},...
+        'VariableNames',{'sweep','block','channel','return_channel','intensity','frequency','pulse_width','n_pulses','is_monophasic','is_cathodal_leading'});
+T.sweep = sweep;
+T.block = block;
+T.channel = channel;
+T.return_channel = return_channel;
+T.intensity = intensity;
+T.frequency = frequency;
+T.pulse_width = pulse_width;
+T.n_pulses = n_pulses;
+T.is_monophasic = is_monophasic;
+T.is_cathodal_leading = is_cathodal_leading;
+
+% T = table(sweep, block, channel, return_channel, intensity, frequency, pulse_width, n_pulses, is_monophasic, is_cathodal_leading);
 T.Properties.UserData = struct(...
     'Parameters', options, ...
     'TStart', start_time, ...
@@ -165,12 +180,14 @@ if ~isempty(client)
     else
         S = readtable(overview_file);
     end
-    s = table('Size',[1 8],'VariableTypes',{'double','double','string','double','double','double','double','double'},...
-        'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency'});
+    s = table('Size',[1 10],'VariableTypes',{'double','double','string','logical','logical','double','double','double','double','double'},...
+        'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Monophasic','CathodalLeading','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency'});
 
     s.Sweep = client.UserData.sweep;
     s.Stim_Channel = T.channel(1);
     s.Return_Channel = T.return_channel(1);
+	s.Monophasic = options.Monophasic;
+	s.CathodalLeading = options.CathodalLeading;
     s.Min_Intensity = min(T.intensity);
     s.Max_Intensity = max(T.intensity);
     all_intensity_asc = sort(unique(T.intensity),'ascend');

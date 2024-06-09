@@ -6,6 +6,8 @@ arguments
     logger
     options.Channel (:,1) {mustBePositive, mustBeInteger} = (1:8)';
     options.CathodalLeading (1,1) logical = true;
+    options.Return (1,1) {mustBeMember(options.Return,["?","L","R","X1","X2","X3","X4","X5","X6","X7","X8","X9"])} = "?";
+    options.Monophasic (1,1) logical = false;
     options.DelayAfterSettingParameters (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterSettingParameters,0)} = 0.5; %
     options.DelayAfterRunCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterRunCommand, 0)} = 0.025;
     options.DelayAfterNameCommand (1,1) double {mustBeGreaterThanOrEqual(options.DelayAfterNameCommand, 0)} = 0.025;
@@ -98,6 +100,7 @@ for iCh = 1:nChannels
         AM4100_setStimParameters(am4100, logger, ...
             amp, pw, ...
             -amp / options.PulseReductionFactor, pw * options.PulseReductionFactor, ...
+            'Monophasic', options.Monophasic, ...
             'PulsePeriod', pulse_period, ...
             'PulsesPerBurst', n_pulses(ii),  ...
             'PostBurstBuffer', options.PostBurstBuffer, ...
@@ -140,18 +143,57 @@ for iCh = 1:nChannels
 
     RELAYS_turnOffChannel(shuffledChannels(iCh));
     pause(options.PauseAfterChannelCommand);
-    T = table(sweep, block, channel, intensity, frequency, pulse_width, n_pulses);
+    is_monophasic = repmat(options.Monophasic, nTotalLevels,1);
+    is_cathodal_leading = repmat(options.CathodalLeading, nTotalLevels, 1);
+    T = table('Size',[nTotalLevels 10],'VariableTypes',{'double','double','string','double','double','double','double','double'},...
+            'VariableNames',{'sweep','block','channel','return_channel','intensity','frequency','pulse_width','n_pulses','is_monophasic','is_cathodal_leading'});
+    T.sweep = sweep;
+    T.block = block;
+    T.channel = channel;
+    T.return_channel = return_channel;
+    T.intensity = intensity;
+    T.frequency = frequency;
+    T.pulse_width = pulse_width;
+    T.n_pulses = n_pulses;
+    T.is_monophasic = is_monophasic;
+    T.is_cathodal_leading = is_cathodal_leading;
     T_all = [T_all; T]; %#ok<AGROW>
     T.Properties.UserData = struct('Parameters', options, 'Channel', shuffledChannels(iCh));
     if ~isempty(client)
         tank = sprintf('%s_%04d_%02d_%02d', ...
-            client.UserData.subject, client.UserData.year, ...
-            client.UserData.month, client.UserData.day);
+        client.UserData.subject, client.UserData.year, ...
+        client.UserData.month, client.UserData.day);
         sweep_folder = sprintf('%s_%d', tank, client.UserData.sweep);
-        save_folder = fullfile(options.RawDataRoot, ...
-            client.UserData.subject, tank, sweep_folder);
-        writetable(T_all, fullfile(save_folder, sprintf('%s.xlsx', sweep_folder)));
-        save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T_all', '-v7.3');
+        subject_folder = fullfile(options.RawDataRoot, client.UserData.subject);
+        save_folder = fullfile(subject_folder, tank, sweep_folder);
+        writetable(T, fullfile(save_folder, sprintf('%s.xlsx', sweep_folder)));
+        save(fullfile(save_folder, sprintf('%s_Table.mat', sweep_folder)), 'T', '-v7.3');
+        
+        % Parse metadata overview and make a summary spreadsheet/file as well
+        overview_file = fullfile(subject_folder,sprintf("%s.xlsx",tank));
+        if exist(overview_file,'file')==0
+            S = [];
+        else
+            S = readtable(overview_file);
+        end
+        s = table('Size',[1 10],'VariableTypes',{'double','double','string','logical','logical','double','double','double','double','double'},...
+            'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Monophasic','CathodalLeading','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency'});
+    
+        s.Sweep = client.UserData.sweep;
+        s.Stim_Channel = T.channel(1);
+        s.Return_Channel = T.return_channel(1);
+	    s.Monophasic = options.Monophasic;
+	    s.CathodalLeading = options.CathodalLeading;
+        s.Min_Intensity = min(T.intensity);
+        s.Max_Intensity = max(T.intensity);
+        all_intensity_asc = sort(unique(T.intensity),'ascend');
+        s.Intensity_Step = mode(diff(all_intensity_asc));
+        s.Min_Frequency = min(T.frequency);
+        s.Max_Frequency = max(T.frequency);
+        S = [S; s]; %#ok<AGROW>
+        writetable(S, overview_file);
+        save(fullfile(subject_folder,sprintf('%s.mat',tank)),'S','-v7.3');
+    
         client.UserData.sweep = client.UserData.sweep + 1;
         client.UserData.block = 0;
     end

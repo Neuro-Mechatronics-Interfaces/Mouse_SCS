@@ -1,4 +1,4 @@
-function fig = plot_simulations(simdata,options)
+function [fig, TID] = plot_simulations(simdata,options)
 %PLOT_SIMULATIONS  Plots simulations from NEURON MOTONEURON_M2 model.
 arguments
     simdata
@@ -12,10 +12,13 @@ arguments
     options.YUnits {mustBeTextScalar} = 'mV';
 end
 [G,TID] = findgroups(simdata(:,["M2_Level", "Leak"]));
+TID.Sweep = cell(size(TID,1),1);
 fig = gobjects(size(TID,1),1);
 effective_period = options.SimulationDuration*1e-3; % seconds
 for ik = 1:size(TID,1)
     s = simdata(G == ik,:);
+    s.Rate = nan(size(s,1),1);
+    TID.Sweep{ik} = s(:,["Frequency", "Rate"]);
     fig(ik) = figure('Name','Simulation Data', ...
         'Color','w', ...
         'Units','inches',...
@@ -30,16 +33,16 @@ for ik = 1:size(TID,1)
         tStim = options.InitialOffset:tPeriod:(options.InitialOffset+options.SimulationDuration);
         pks = findpeaks(s.Voltage{ii},'MinPeakHeight',options.APThreshold);
         n = numel(pks);
-        rate = round(n / effective_period);
+        TID.Sweep{ik}.Rate(ii) = round(n / effective_period);
         xline(ax,tStim(1:min(s.Frequency(ii),numel(tStim))),'r:');
         plot(ax, s.Time{ii}, s.Voltage{ii},'Color','k');
-        title(ax, sprintf('%d-Hz → %d-Hz',s.Frequency(ii),rate), 'FontName','Tahoma','Color','k');
+        title(ax, sprintf('%d-Hz → %d-Hz',s.Frequency(ii),TID.Sweep{ik}.Rate(ii)), 'FontName','Tahoma','Color','k');
         xlim(ax,options.XLim);
     end
     xlabel(L,sprintf('Time (%s)',options.XUnits),'FontName','Tahoma','Color','k');
     ylabel(L,sprintf('Amplitude (%s)',options.YUnits),'FontName','Tahoma','Color','k');
     title(L,sprintf("leak conductance: %g ℧/cm^2 | m2 modulation: %gx", TID.Leak(ik), TID.M2_Level(ik)), 'FontName','Tahoma','Color','k','FontWeight','bold');
-    subtitle(L, sprintf('(g_{k,rect} = %g ℧/cm^2)', m2_level(ik)*options.BaseGKRectValue), ...
+    subtitle(L, sprintf('(g_{k,rect} = %g ℧/cm^2)', TID.M2_Level(ik)*options.BaseGKRectValue), ...
         'FontName','Tahoma','Color',[0.65 0.65 0.65]);
 end
 

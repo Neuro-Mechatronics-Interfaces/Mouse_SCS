@@ -37,12 +37,12 @@ UNITS {
 PARAMETER {
     :SOMA PARAMETERS
     gnabar  = 0.05  (mho/cm2)
-    : gl      = 0.002 (mho/cm2) : original value
-	gl = 0.007 (mho/cm2) : from Grill 2002 
-    gkrect  = 0.3   (mho/cm2)
-    gcaN    = 0.05  (mho/cm2)
-    gcaL    = 0.0001 (mho/cm2)
-    gcak    = 0.3   (mho/cm2)
+    gl      = 0.002 (mho/cm2)
+	gkrect = 0.3 (mho/cm2)
+    gcaN    = 0.001  (mho/cm2)
+    gcaL    = 0.0002 (mho/cm2)
+    : gcak    = 0.3   (mho/cm2) : original
+	gcak = 0.01 (mho/cm2)
     ca0     = 2  
     ena     = 50.0  (mV)
     ek      = -80.0 (mV)
@@ -50,10 +50,10 @@ PARAMETER {
     dt              (ms)
     v               (mV)
     amA = 0.4
-    amB = 66
+    amB = 59
     amC = 5
     bmA = 0.4
-    bmB = 32
+    bmB = 31.5
     bmC = 5
     R=8.314472 : Universal gas constant (J / mol*K)
     F=96485.34 : Faraday constant (C / mol)
@@ -145,7 +145,7 @@ PROCEDURE evaluate_fct(v (mV)) { LOCAL a, b, v2
     hc_inf = 1 / (1 + Exp((v + 50) / 5))
 
     :L-type
-    tau_p = 400
+    tau_p = 400 : original
     p_inf = 1 / (1 + Exp(-(v + 55.8) / 3.7))
 }
 

@@ -7,7 +7,7 @@ arguments
     options.BLOCK (1,1) {mustBeInteger} = 0;
     options.SWEEP (1,1) {mustBeInteger} = 0;
     options.STIM_CHANNEL (1,1) {mustBeInteger} = 1;
-    options.STIM_RETURN (1,1) {mustBeMember(options.STIM_RETURN,["X","L","R"])} = "X";
+    options.STIM_RETURN (1,1) {mustBeMember(options.STIM_RETURN,["?","L","R","X1","X2","X3","X4","X5","X6","X7","X8","X9"])} = "?";
     options.INTENSITIES (1,:) double = 30:30:300;
     options.FREQUENCIES (1,:) double = [1, 10, 40, 100];
     options.PULSE_WIDTH (1,1) double = 200;
@@ -74,7 +74,7 @@ lab.Layout.Row = 4;
 lab.Layout.Column = 1;
 fig.UserData.ReturnDropDown = uidropdown(L,  ...
     "FontName","Consolas",...
-    "Items", ["X","L","R"], ...
+    "Items", ["?","L","R","X1","X2","X3","X4","X5","X6","X7","X8","X9"], ...
     "Value",options.STIM_RETURN);
 fig.UserData.ReturnDropDown.Layout.Row = 4;
 fig.UserData.ReturnDropDown.Layout.Column = 2;

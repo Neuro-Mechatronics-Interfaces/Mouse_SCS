@@ -6,18 +6,17 @@ create soma, dend[3]
 
 soma {
     L = 30 // length
-    diam = 30 // diameter
-    insert hh // insert Hodgkin-Huxley channels
+    diam = 40 // diameter
 	insert motoneuron_m2 // insert motor neuron properties
 }
 
 for i=0,2 {
     dend[i] {
-        L = 100 + 100 * i
-        diam = 1 + i
+        L = 25
+        diam = 1
         nseg = 5
-        insert pas // passive properties
-		insert motoneuron_m2
+		insert pas
+		gnabar = 0.005
     }
 }
 
@@ -26,16 +25,14 @@ connect dend[0](0), soma(1)
 connect dend[1](0), soma(1)
 connect dend[2](0), soma(1)
 
-// Create and configure axon (assuming axon is already defined in MRGaxon.hoc)
-// Example axon setup (this may differ based on the original file's content)
+
 create axon
 axon {
     L = 1000
-    diam = 1
-    insert hh
+    diam = 2
 	insert motoneuron_m2
 }
-
+axon.gnabar_motoneuron_m2 = 0.3
 // Connect axon to the soma
 connect soma(0), axon(1)
 
@@ -43,73 +40,44 @@ objref syn0, syn1, syn2, stim0, stim1, stim2
 
 dend[0] {
     syn0 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-    syn0.tau1 = 0.5 // rise time constant
-    syn0.tau2 = 2 // decay time constant
-    syn0.e = 0 // reversal potential
 }
 dend[1] {
     syn1 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-    syn1.tau1 = 0.5 // rise time constant
-    syn1.tau2 = 2 // decay time constant
-    syn1.e = 0 // reversal potential
 }
 dend[2] {
     syn2 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-    syn2.tau1 = 0.5 // rise time constant
-    syn2.tau2 = 2 // decay time constant
-    syn2.e = 0 // reversal potential
 }
 
 // Stimulus to generate EPSPs at a specified rate
 stim0 = new NetStim(0.5)
-stim0.interval = 300 // interval in ms
-stim0.number = 10 // number of spikes
 stim0.start = 50 // start time in ms
 stim0.noise = 0 // no variability in spike timing
 
 stim1 = new NetStim(0.5)
-stim1.interval = 300 // interval in ms
-stim1.number = 10 // number of spikes
-stim1.start = 150 // start time in ms
 stim1.noise = 0 // no variability in spike timing
 
 stim2 = new NetStim(0.5)
-stim2.interval = 300 // interval in ms
-stim2.number = 10 // number of spikes
-stim2.start = 250 // start time in ms
 stim2.noise = 0 // no variability in spike timing
 
 
 // Connect stimulus to synapse
-objref nc0, nc1, nc2
-nc0 = new NetCon(stim0, syn0)
-nc0.weight[0] = 0.05 // synaptic weight
-nc1 = new NetCon(stim1, syn1)
-nc1.weight[0] = 0.05
-nc2 = new NetCon(stim2, syn2)
-nc2.weight[0] = 0.05
+objref nc00, nc01, nc02, nc10, nc11, nc12, nc20, nc21, nc22
+nc00 = new NetCon(stim0, syn0)
+nc01 = new NetCon(stim0, syn1)
+nc02 = new NetCon(stim0, syn2)
+nc10 = new NetCon(stim1, syn0)
+nc11 = new NetCon(stim1, syn1)
+nc12 = new NetCon(stim1, syn2)
+nc20 = new NetCon(stim2, syn0)
+nc21 = new NetCon(stim2, syn1)
+nc22 = new NetCon(stim2, syn2)
 
 // Record time and voltage
 objref tvec, vvec
 tvec = new Vector()
 vvec = new Vector()
 tvec.record(&t)
-vvec.record(&soma.v(0.5))
-
-// Simulation parameters
-tstop = 1000 // stop time in ms
-dt = 0.025 // time step
-
-// Initialize and run the simulation
-finitialize(-65)
-run()
-
-// Record time and voltage
-objref tvec, vvec
-tvec = new Vector()
-vvec = new Vector()
-tvec.record(&t)
-vvec.record(&soma.v(0.5))
+vvec.record(&axon.v(0.5))
 
 freq = 10
 m2_cur = 0.5
@@ -117,6 +85,8 @@ leak_cur = 0.0
 w0 = 1
 w1 = 1
 w2 = 1
+tstop = 1000
+dt = 0.025
 
 // Function to run the simulation and record voltage
 proc run_simulation() {
@@ -124,19 +94,22 @@ proc run_simulation() {
     soma.m2_modulation_motoneuron_m2 = m2_cur // Set the m2 modulation level
     stim0.interval = 3000 / freq // Set the stimulation frequency
     stim0.number = freq
-	nc0.weight[0] = w0
+	nc00.weight[0] = w0
+	nc01.weight[0] = w0
+	nc02.weight[0] = w0
     stim1.interval = 3000 / freq
     stim1.start = (1000 / freq) + 50
     stim1.number = freq
-	nc1.weight[0] = w1
+	nc10.weight[0] = w1
+	nc11.weight[0] = w1
+	nc12.weight[0] = w1
     stim2.interval = 3000 / freq
     stim2.start = (2000 / freq) + 50
     stim2.number = freq
-	nc2.weight[0] = w2
-
-    // Simulation parameters
-    tstop = 1000 // stop time in ms
-    dt = 0.025 // time step
+	nc20.weight[0] = w2
+	nc21.weight[0] = w2
+	nc22.weight[0] = w2
+	
 
     // Initialize and run the simulation
     finitialize(-65)
@@ -145,24 +118,20 @@ proc run_simulation() {
 
 // Sweep through frequencies
 objref m2_levels, leak_levels, frequencies, w0_levels, w1_levels, w2_levels
-leak_levels = new Vector() // 3 leak current levels
-leak_levels.append(0.000) // no leak
+leak_levels = new Vector() // 2 leak current levels
 leak_levels.append(0.002) // from Capogrosso/Formento model 2016
-leak_levels.append(0.007) // from Grill model 2002
-m2_levels = new Vector() // 3 modulation levels
+leak_levels.append(0.007) // McIntyre/Grill 2002
+m2_levels = new Vector() // 2 modulation levels
 m2_levels.append(0.1)
 m2_levels.append(1.0)
 m2_levels.append(10.0)
 frequencies = new Vector() // 9 frequencies
+frequencies.append(1)
+frequencies.append(5)
 frequencies.append(10)
-frequencies.append(20)
 frequencies.append(30)
-frequencies.append(40)
 frequencies.append(50)
-frequencies.append(75)
 frequencies.append(100)
-frequencies.append(150)
-frequencies.append(200)
 
 // 4 combinations of stim pulse sequencing weights
 w0_levels = new Vector()
@@ -173,21 +142,18 @@ w0_levels.append(30)
 w1_levels.append(30)
 w2_levels.append(30)
 // "Increasing" sweep
-w0_levels.append(10)
-w1_levels.append(30)
-w2_levels.append(50)
+// w0_levels.append(10)
+// w1_levels.append(30)
+// w2_levels.append(50)
 // "Up-Down" sweep
-w0_levels.append(20)
-w1_levels.append(50)
-w2_levels.append(20)
+// w0_levels.append(20)
+// w1_levels.append(50)
+// w2_levels.append(20)
 // "Decreasing" sweep
-w0_levels.append(50)
-w1_levels.append(30)
-w2_levels.append(10)
+// w0_levels.append(50)
+// w1_levels.append(30)
+// w2_levels.append(10)
 
-// Takes ~1 minute to process 18 simulation runs at dt = 0.025 and tstop = 1000. 
-// --> ~2 minutes to complete all frequencies/weight-levels for a single m2/leak level
-// ----> ~18 minutes for a full simulation run.
 
 objref frout, m2out, leakout
 proc save_metadata() {
