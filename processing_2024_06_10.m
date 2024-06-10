@@ -9,8 +9,8 @@ clear;
 SUBJ = "Pilot_SCS_N_CEJ_04";
 YYYY = 2024;
 MM = 6;
-DD = 4;
-SWEEP = 0;
+DD = 10;
+SWEEP = 41;
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
 EXPORT_DATA_ROOT = parameters('local_export_folder');
@@ -58,7 +58,7 @@ for iSweep = SWEEP
             "MuscleResponseTimesFile", MUSCLE_RESPONSE_TIMES_FILE, ...
             "DigInSyncChannel", DIG_IN_SYNC_CHANNEL_NUMBER, ...
             "Verbose", true, ...
-            'FilterParameters',{'ApplyFiltering', false});
+            'FilterParameters',{'ApplyFiltering', true});
     
     % 4. Plot selected examples of response snippets
     [snippetStackFigure, cdata] = plotResponseSnippets(t.*1e3, ...
@@ -87,7 +87,8 @@ for iSweep = SWEEP
     end
 
     blipFigure = plot_blips(muscle,blip,T,[],...
-        'CalibrationFile',MUSCLE_RESPONSE_TIMES_FILE);
+        'CalibrationFile',MUSCLE_RESPONSE_TIMES_FILE, ...
+        'YOffset', 0.1);
     for ii = 1:numel(blipFigure)
         slideId = pptx.addSlide();
         pptx.addTextbox(num2str(slideId), ...

@@ -22,7 +22,7 @@ arguments
     options.Muscle (:,1) string = ""
 end
 if isempty(options.CMapData)
-    cdata = jet(numel(channel));
+    cdata = copper(numel(channel));
 else
     cdata = options.CMapData;
 end

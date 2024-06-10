@@ -1,7 +1,7 @@
 %%EXPERIMENT_2024_06_10  Runs experiment (2024-06-10: Pilot-4).
 
 SUBJECT_NAME = "Pilot_SCS_N_CEJ_04";  % Name of the subject
-START_SWEEP = 0; % Modify this if you have to reset in the middle.
+START_SWEEP = 24; % Modify this if you have to reset in the middle.
 START_BLOCK = 0; % Modify this if you have to reset in the middle. 
 RAW_DATA_ROOT = parameters('raw_data_folder_root'); % Should be correct on NML Rodent lab computer
 

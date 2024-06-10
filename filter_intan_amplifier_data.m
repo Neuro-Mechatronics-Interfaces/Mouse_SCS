@@ -16,16 +16,16 @@ function [data, filtering] = filter_intan_amplifier_data(data, options)
 arguments
     data
     options.ApplyFiltering (1,1) logical = true;
-    options.ApplyCAR (1,1) logical = true;
+    options.ApplyCAR (1,1) logical = false;
     options.ApplyPreFilterCAR (1,1) logical = false;
     options.ArtifactDuration (1,1) double = 1e-3; % Artifact duration (seconds)
-    options.BlankArtifactBeforeFiltering (1,1) logical = true;
+    options.BlankArtifactBeforeFiltering (1,1) logical = false;
     options.OutlierRejectionCARThresholdDeviations (1,1) double = 3.5; % If channel-wise signal RMS deviates from median RMS by greater than this value, set to zero and suppress in CAR
     options.ArtifactOnset (1,:) {mustBePositive, mustBeInteger} = [];
     options.ComputeEnvelope (1,1) logical = false;
-    options.CutoffFrequency (1,:) = 100;
+    options.CutoffFrequency (1,:) = 250;
     options.NBlankedSamplesAtStart (1,1) {mustBePositive, mustBeInteger} = 100; % To account for using `filter` instead of `filtfilt`
-    options.FilterOrder (1,1) {mustBePositive, mustBeInteger} = 1;
+    options.FilterOrder (1,1) {mustBePositive, mustBeInteger} = 2;
     options.SampleRate (1,1) {mustBePositive} = 20000;
     options.SuppressArtifactAfterFiltering (1,1) logical = false;
     options.Verbose (1,1) logical = true;
@@ -87,7 +87,7 @@ if isscalar(options.CutoffFrequency)
     end
     [filtering.coeff.first.b,filtering.coeff.first.a] = butter(options.FilterOrder,options.CutoffFrequency./(options.SampleRate/2),'high');
     data = filter(filtering.coeff.first.b, filtering.coeff.first.a, data, [], 2);
-    data(:,1:options.NBlankedSamplesAtStart) = 0;
+    data(:,1:options.NBlankedSamplesAtStart) = zeros(size(data,1),options.NBlankedSamplesAtStart);
     if options.Verbose
         fprintf(1,'complete\n');
     end
