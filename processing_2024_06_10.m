@@ -10,7 +10,7 @@ SUBJ = "Pilot_SCS_N_CEJ_04";
 YYYY = 2024;
 MM = 6;
 DD = 10;
-SWEEP = 41;
+SWEEP = 70;
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
 EXPORT_DATA_ROOT = parameters('local_export_folder');
@@ -49,6 +49,23 @@ for iSweep = SWEEP
             'FontName', 'Tahoma', ...
             'HorizontalAlignment', 'center', ...
             'FontSize', 36);
+    if T.is_monophasic(1)
+        pulse_type = "monophasic";
+    else
+        pulse_type = "biphasic";
+    end
+    if T.is_cathodal_leading(1)
+        pulse_pol = "cathodal";
+    else
+        pulse_pol = "anodal";
+    end
+    pptx.addTextbox(sprintf('%s-%s pulses', pulse_type, pulse_pol), ...
+            'Position',[0 5.5 10 1.5], ...
+            'FontName', 'Tahoma', ...
+            'HorizontalAlignment', 'center', ...
+            'Color', [0.65 0.65 0.65], ...
+            'FontSize', 18);
+
 
     % 3. Index and filter data, estimate responses
     [snips, t, response, blip, filtering, fdata] =  ...
@@ -88,7 +105,7 @@ for iSweep = SWEEP
 
     blipFigure = plot_blips(muscle,blip,T,[],...
         'CalibrationFile',MUSCLE_RESPONSE_TIMES_FILE, ...
-        'YOffset', 0.1);
+        'YOffset', 10);
     for ii = 1:numel(blipFigure)
         slideId = pptx.addSlide();
         pptx.addTextbox(num2str(slideId), ...
