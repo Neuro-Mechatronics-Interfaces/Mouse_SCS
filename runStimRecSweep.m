@@ -144,7 +144,7 @@ end
 
 is_monophasic = repmat(options.Monophasic, nTotalLevels,1);
 is_cathodal_leading = repmat(options.CathodalLeading, nTotalLevels, 1);
-T = table('Size',[nTotalLevels 10],'VariableTypes',{'double','double','string','double','double','double','double','double'},...
+T = table('Size',[nTotalLevels 10],'VariableTypes',{'double','double','string','double','double','double','double','double','logical','logical'},...
         'VariableNames',{'sweep','block','channel','return_channel','intensity','frequency','pulse_width','n_pulses','is_monophasic','is_cathodal_leading'});
 T.sweep = sweep;
 T.block = block;
@@ -180,8 +180,8 @@ if ~isempty(client)
     else
         S = readtable(overview_file);
     end
-    s = table('Size',[1 10],'VariableTypes',{'double','double','string','logical','logical','double','double','double','double','double'},...
-        'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Monophasic','CathodalLeading','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency'});
+    s = table('Size',[1 11],'VariableTypes',{'double','double','string','logical','logical','double','double','double','double','double','string'},...
+        'VariableNames',{'Sweep','Stim_Channel','Return_Channel','Monophasic','CathodalLeading','Min_Intensity','Max_Intensity','Intensity_Step','Min_Frequency','Max_Frequency','Notes'});
 
     s.Sweep = client.UserData.sweep;
     s.Stim_Channel = T.channel(1);

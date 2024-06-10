@@ -144,9 +144,9 @@ fig.UserData.Monophasic.Layout.Column = 2;
 lab = uilabel(L,"Text","Cathodal",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
 lab.Layout.Row = 11;
 lab.Layout.Column = 1;
-fig.UserData.Monophasic = uicheckbox(L, 'Value', 1, 'Tooltip', "Set checked if pulses are cathodal-leading.");
-fig.UserData.Monophasic.Layout.Row = 11;
-fig.UserData.Monophasic.Layout.Column = 2;
+fig.UserData.CathodalLeading = uicheckbox(L, 'Value', 1, 'Tooltip', "Set checked if pulses are cathodal-leading.");
+fig.UserData.CathodalLeading.Layout.Row = 11;
+fig.UserData.CathodalLeading.Layout.Column = 2;
 
 lab = uilabel(L,"Text","Save Folder",'FontName','Tahoma','FontColor','w','HorizontalAlignment','right');
 lab.Layout.Row = 12;
@@ -162,6 +162,7 @@ fig.UserData.RunButton.Layout.Row = 13;
 fig.UserData.RunButton.Layout.Column = 2;
 
     function execute_stim_rec_sweep(src,~)
+        clc;
         u = src.Parent.Parent.UserData;
         u.client.UserData.sweep = u.SweepSpinBox.Value;
         u.client.UserData.block = u.BlockSpinBox.Value;
@@ -173,7 +174,7 @@ fig.UserData.RunButton.Layout.Column = 2;
             'Title', "Running Stim Sweep...");
         T = runStimRecSweep(u.client, u.am4100, u.logger, ...
             'Channel', u.ChannelSpinBox.Value, ...
-            'Return', u.ReturnDropDown.Value, ...
+            'Return', string(u.ReturnDropDown.Value), ...
             'Intensity', iVal, ...
             'Frequency', fVal, ...
             'Monophasic', u.Monophasic.Value==1, ...
