@@ -22,7 +22,7 @@ arguments
     options.Muscle (:,1) string = ""
 end
 if isempty(options.CMapData)
-    cdata = copper(numel(channel));
+    cdata = winter(numel(channel)).*0.65;
 else
     cdata = options.CMapData;
 end
@@ -45,16 +45,20 @@ for iT = 1:size(TID,1)
 
     for iCh = 1:numel(channel)
         ax = nexttile(L);
-        [G_intensity,uG] = findgroups(Tsub.intensity);
-        G_intensity = repelem(G_intensity,n_snips,1);
-        if rem(numel(uG),2)==1
-            nCol = numel(uG)+8;
+        if isscalar(unique(Tsub.intensity))
+            [G_intensity,uG] = findgroups(Tsub.intensity);
+            G_intensity = repelem(G_intensity,n_snips,1);
+            if rem(numel(uG),2)==1
+                nCol = numel(uG)+8;
+            else
+                nCol = numel(uG)+9; 
+            end
+            cdata_cur = flipud(cm.umap(cdata(iCh,:),nCol));
+            cdata_cur([1,2,(end-3):end],:) = [];
+            cdata_cur = double(cdata_cur(G_intensity,:))./255.0;
         else
-            nCol = numel(uG)+9; 
+            cdata_cur = cdata(iCh,:);
         end
-        cdata_cur = flipud(cm.umap(cdata(iCh,:),nCol));
-        cdata_cur([1,2,(end-3):end],:) = [];
-        cdata_cur = double(cdata_cur(G_intensity,:))./255.0;
         set(ax,'NextPlot','add',...
             'XLim',[t(1), t(end)], ...
             'YLim',[-options.YOffset, options.YOffset*(nResponses+2)], ...
