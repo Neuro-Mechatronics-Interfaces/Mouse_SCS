@@ -6,11 +6,11 @@ clear;
 
 %% 1. Set parameters
 % % % Recording-specific metadata parameters % % %
-SUBJ = "Pilot_SCS_N_CEJ_04";
+SUBJ = "Pilot_SCS_N_CEJ_05";
 YYYY = 2024;
 MM = 7;
-DD = 10;
-SWEEP = 2;
+DD = 2;
+SWEEP = 66;
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
 EXPORT_DATA_ROOT = parameters('local_export_folder');
