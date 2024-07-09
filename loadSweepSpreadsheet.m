@@ -16,6 +16,11 @@ if exist(sweep_spreadsheet, 'file')==0
     warning("No sweep spreadsheet: %s\n", sweep_spreadsheet);
 else
     T = readtable(sweep_spreadsheet);
+    T.Properties.UserData = struct;
+    T.Properties.UserData.Subject = SUBJ;
+    T.Properties.UserData.Tank = TANK;
+    T.Properties.UserData.Sweep = sweep;
+    T.Properties.UserData.RootFolder = raw_root;
 end
 
 end

@@ -72,7 +72,7 @@ if options.LoadIntan
             error("%d elements in sub-folder (%s). Should only be 1.\n", numel(Ff), fullfile(F(1).folder, F(1).name));
         end
         fname = fullfile(Ff(1).folder, Ff(1).name);
-        intan{iT} = io.read_Intan_RHD2000_file(fname);
+        intan{iT} = io.read_Intan_RHD2000_file(fname,'Verbose',options.Verbose);
     end
     intan = vertcat(intan{:});
 else
