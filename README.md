@@ -2,15 +2,38 @@
 For mouse SCS procedures.  
 
 ## Quick Start ##
-Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_03"`:  
-1. Start Intan RHX software. Select 20kHz for sample rate.  
-2. In RHX UI, click `File > Load Settings` and select `Mouse_SCS.xml`.  
-3. In RHX UI, click `Network > Remote TCP Control`, set Host to `127.0.0.1` and click `Connect`.  
-4. In MATLAB, navigate to `C:/MyRepos/NML/Mouse_SCS`.  
-5. Open `experiment_2024_06_04.m` and click `Run` from the `Editor` tab in the UI.  
-6. Open `processing_2024_06_04.m`. 
-7. Enter experimental parameters and click `RUN` from the stimulation controller GUI.  
-8. After each sweep, update the `SWEEP` constant at the top of `processing_2024_06_04.m` and then click `Run` from the `Editor` tab in the UI.  
+Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_07"` on `2024-07-25`:  
+
+### Prepare Procedure Code and Files ###  
+1. Open MATLAB R202b and navigate to `C:/MyRepos/NML/Mouse_SCS`.  
+1. Copy `experiment_2024_07_17.m` to `experiment_2024_07_25.m`. Rename the `SUBJECT_NAME` from `"Pilot_SCS_N_CEJ_06"` to `"Pilot_SCS_N_CEJ_07"`.  
+2. Copy `processing_2024_07_17.m` to `processing_2024_07_25.m`. Rename `SUBJ` from `"Pilot_SCS_N_CEJ_06"` to `"Pilot_SCS_N_CEJ_07"`. Make sure `YYYY`, `MM`, and `DD` accurately reflect today's date. 
+3. Copy `Pilot_SCS_N_CEJ_06_Channel_Map.txt` to `Pilot_SCS_N_CEJ_07_Channel_Map.txt`. Draw the Picasso Rat on the whiteboard with numbers according to channels in that file.  
+4. Copy `Muscle_Response_Times_Exponential_2024_07_17.xlsx` to `Muscle_Response_Times_Exponential_2024_07_25.xlsx`. Adjust latencies in this file as needed during experiment (make sure the file is otherwise closed).  
+5. Leave this MATLAB instance open on `processing_2024_07_25.m`. You will update `SWEEP` number to reflect any experiment you want to export figures for.  
+
+### Start Intan ###
+1. Make sure that Intan 512ch RECORDING CONTROLLER is powered on and plugged into the computer via USB.
+2. Start Intan RHX software. Select 20kHz for sample rate.  
+3. In RHX UI, click `File > Load Settings` and select `Mouse_SCS.xml`.  
+4. On the `Triggers` tab you can toggle "Triggered" mode on and off, which can be helpful to enable during the actual stimulation runs but otherwise should be toggled off.  
+5. The Spike Scope is accessed from the menu bar at the top. Make sure to toggle `Lock to Selected` so the scope shows the current channel you click in the main interface.  
+6. In RHX UI, click `Network > Remote TCP Control`, set Host to `127.0.0.1` and click `Connect`.  
+
+### Start AM4100 ### 
+1. Get the stimulation leads and plug into the anode/cathode ports on AM4100.
+2. Make sure that AM4100 is powered on.
+3. Make sure the green ENABLE switch is pressed.  
+  + After depressing the switch, click OK when it gives the high voltage warning.  
+4. Connect BNC from AM4100 `Sync 1` to Intan `DIGITAL IN 1`, and from AM4100 `Sync 2` to Intan `DIGITAL IN 2`. Connect BNC from AM4100 `MONITOR` to Intan `ANALOG IN 1`.  
+
+### Start MATLAB GUI ###
+1. Right-click MATLAB icon and then click MATLAB R2020b to open a second MATLAB instance.
+2. Open `experiment_2024_07_25.m` and click `Run` from the `Editor` tab in the UI.  
+  + This should cause the stim controller GUI to populate. Move that somewhere convenient on-screen.  
+3. Make this MATLAB instance a small window and minimize it- DO NOT RUN `processing...m` from this window or you'll need to restart everything. Go back to the other previously opened MATLAB instance.  
+4. Enter experimental parameters and click `RUN` from the stimulation controller GUI.  
+5. After each sweep, update the `SWEEP` constant at the top of `processing_2024_07_25.m` and then click `Run` from the `Editor` tab in the UI.  
   + This should generate a new Powerpoint for each sweep with the stimulus response curves, on the Google Drive mapped in `parameters.m`.   
 
 ## Contents ##  
