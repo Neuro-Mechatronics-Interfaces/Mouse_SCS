@@ -1,4 +1,4 @@
-%PROCESSING_2024_07_22c  Processing associated with 2024-07-22c procedure.
+%PROCESSING_2024_07_22d  Processing associated with 2024-07-22d procedure.
 %#ok<*UNRCH>
 close all force;
 clc;
@@ -6,16 +6,16 @@ clear;
 
 %% 1. Set parameters
 % % % Recording-specific metadata parameters % % %
-SUBJ = "Pilot_SCS_N_CEJ_09";
+SUBJ = "Pilot_SCS_N_CEJ_10";
 YYYY = 2024;
 MM = 7;
 DD = 22;
-SWEEP = 56;
-TAG = 'c';
+SWEEP = 35;
+TAG = 'd';
 
 PLOT_ALL_FDATA = false;
 PLOT_RECRUITMENT = true;
-EXPORT_PULSE_RECRUITMENT_SCATTERS = true;
+EXPORT_PULSE_RECRUITMENT_SCATTERS = false;
 
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
