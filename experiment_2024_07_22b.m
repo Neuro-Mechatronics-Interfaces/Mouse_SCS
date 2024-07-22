@@ -1,6 +1,6 @@
-%%EXPERIMENT_2024_07_25  Runs experiment (2024-07-25: Pilot-7).
+%%EXPERIMENT_2024_07_22b  Runs experiment (2024-07-22b: Pilot-8).
 
-SUBJECT_NAME = "Pilot_SCS_N_CEJ_07";  % Name of the subject
+SUBJECT_NAME = "Pilot_SCS_N_CEJ_08";  % Name of the subject
 START_SWEEP = 0; % Modify this if you have to reset in the middle.
 START_BLOCK = 0; % Modify this if you have to reset in the middle. 
 RAW_DATA_ROOT = parameters('raw_data_folder_root'); % Should be correct on NML Rodent lab computer
@@ -20,9 +20,17 @@ if exist(DATA_TANK_ROOT,'dir')==0
 end
 MAP_NAME_REMOTE = fullfile(RAW_DATA_ROOT, MAP_NAME_LOCAL);
 if exist(MAP_NAME_LOCAL,'file')==0
+    copyfile('Default_Mouse_EMG_Channel_Map.txt', MAP_NAME_LOCAL);
     copyfile('Default_Mouse_EMG_Channel_Map.txt', MAP_NAME_REMOTE);
 else
     copyfile(MAP_NAME_LOCAL, MAP_NAME_REMOTE); 
+end
+fprintf(1,'Put Channel Map in <b>%s</b>\n',MAP_NAME_REMOTE);
+
+ABOUT_NAME_REMOTE = fullfile(DATA_TANK_ROOT, "about.yaml");
+if exist(ABOUT_NAME_REMOTE,'file')==0
+    copyfile(fullfile(pwd,'about_template.yaml'),ABOUT_NAME_REMOTE);
+    fprintf(1,'Put template about.yaml in <b>%s</b>\n',ABOUT_NAME_REMOTE);
 end
 
 STIM_ENABLE = true;

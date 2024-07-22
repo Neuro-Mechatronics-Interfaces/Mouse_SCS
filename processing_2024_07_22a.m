@@ -1,4 +1,4 @@
-%PROCESSING_2024_07_17  Processing associated with 2024-07-17 procedure.
+%PROCESSING_2024_07_22a  Processing associated with 2024-07-22a procedure.
 %#ok<*UNRCH>
 close all force;
 clc;
@@ -6,12 +6,12 @@ clear;
 
 %% 1. Set parameters
 % % % Recording-specific metadata parameters % % %
-SUBJ = "Pilot_SCS_N_CEJ_06";
+SUBJ = "Pilot_SCS_N_CEJ_07";
 YYYY = 2024;
 MM = 7;
-DD = 17;
+DD = 22;
 SWEEP = 0;
-
+TAG = 'a';
 PLOT_ALL_FDATA = false;
 PLOT_RECRUITMENT = false;
 % RAW_DATA_ROOT = "C:/Data/SCS";
@@ -21,7 +21,7 @@ EXPORT_DATA_ROOT = parameters('local_export_folder');
 % % % Parameters for response estimation % % %
 DIG_IN_SYNC_CHANNEL_NUMBER = 2; % Index of DIG_IN connector used for stim onset sync signals
 TLIM_SNIPPETS = [-0.002, 0.006]; % Seconds (for signal indexing, relative to each stim onset)
-MUSCLE_RESPONSE_TIMES_FILE = sprintf("Muscle_Response_Times_Exponential_%04d_%02d_%02d.xlsx",YYYY,MM,DD);
+MUSCLE_RESPONSE_TIMES_FILE = sprintf("Muscle_Response_Times_Exponential_%04d_%02d_%02d%s.xlsx",YYYY,MM,DD,TAG);
 [MUSCLE, CHANNEL_INDEX] = load_channel_map(sprintf('%s_Channel_Map.txt',SUBJ));
 muscle = MUSCLE(CHANNEL_INDEX);
 RECRUITMENT_PULSE_INDEX = 1;
