@@ -10,12 +10,14 @@ SUBJ = "Pilot_SCS_N_CEJ_11";
 YYYY = 2024;
 MM = 7;
 DD = 24;
-SWEEP = 0;
+% SWEEP = 33; % 40-Hz 20 reps for Triceps (2 x4)
+% SWEEP = 35; % 40-Hz 20 reps for Deltoid (1 x3)
+SWEEP = 38; % 40-Hz 20 reps for Wrist (3 x5)
 TAG = 'a';
 
 PLOT_ALL_FDATA = false;
 PLOT_RECRUITMENT = true;
-EXPORT_PULSE_RECRUITMENT_SCATTERS = false;
+EXPORT_PULSE_RECRUITMENT_SCATTERS = true;
 
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
@@ -146,9 +148,20 @@ for iSweep = SWEEP
         uFrequency = unique(T.frequency);
         
         batch_export_pulse_recruitment(uIntensity, uFrequency, muscle, T, response, 'CData', cdata);
-        for ii = 1:numel(uFrequency)
-            for ik = 1:numel(uIntensity)
-                for iM = 1:numel(muscle)
+        for iM = 1:numel(muscle)
+            slideId = pptx.addSlide();
+            pptx.addTextbox(num2str(slideId), ...
+                    'Position',[4 7 0.5 0.5], ...
+                    'VerticalAlignment','bottom', ...
+                    'HorizontalAlignment','center', ...
+                    'FontSize', 10);
+            pptx.addTextbox(muscle(iM), ...
+                    'Position',[0 3.5 10 1.5], ...
+                    'FontName', 'Tahoma', ...
+                    'HorizontalAlignment', 'center', ...
+                    'FontSize', 36);
+            for ii = 1:numel(uFrequency)
+                for ik = 1:numel(uIntensity)
                     slideId = pptx.addSlide();
                     pptx.addTextbox(num2str(slideId), ...
                         'Position',[4 7 0.5 0.5], ...
@@ -240,16 +253,3 @@ if isscalar(SWEEP)
 else
     pptx.save(sprintf('%s/%s/%s_Recruitment_All',EXPORT_DATA_ROOT,SUBJ,SUBJ));
 end
-
-% %%
-% 
-% pptx = exportToPPTX('', ...
-%     'Dimensions',[10, 7.5], ...
-%     'Title',sprintf("%s Recruitment Curves", SUBJ), ...
-%     'Author','Max Murphy (MATLAB Auto-gen)', ...
-%     'Subject',SUBJ, ...
-%     'Comments',sprintf('Recruitment curves from Mouse SCS procedure %s.', SUBJ));
-% muscle_index = 4;
-% recruitmentFigure = batch__export_recruitment_by_pulse(T, response, CHANNEL_INDEX(muscle_index), MUSCLE(muscle_index), pptx);
-% close all force;
-% pptx.save('recruitment-by-pulse');

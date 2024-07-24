@@ -1,5 +1,5 @@
 function [fig, cdata] = plotResponseSnippets(t, snips, channel, T, options)
-%PLOTRESPONSESNIPPETS  Plot snippet response squiggles
+%PLOTRESPONSESNIPPETS  Plot snippet response squiggles (first figure slide in exported pptx decks).
 %
 % Syntax:
 %   fig = plotResponseSnippets(t, snips, channel, T, 'Name', Value, ...);
@@ -20,6 +20,7 @@ arguments
     options.YOffset (1,1) double = 2500;
     options.CMapData = [];
     options.Muscle (:,1) string = ""
+	options.NMaxSnippets (1,1) double {mustBeInteger, mustBePositive} = 25;
 end
 if isempty(options.CMapData)
     cdata = winter(numel(channel)).*0.65;
@@ -35,11 +36,20 @@ for iT = 1:size(TID,1)
         'UserData', struct('Title', "", 'Subtitle', "", 'Frequency', []));
     L = tiledlayout(fig(iT), 'flow');
     Tsub = sortrows(T(T.frequency == TID.frequency(iT),:),'intensity','ascend');
-    index = Tsub.block+1;
-%     index = Tsub.block;
+    index = Tsub.block+1; % Add 1 since we are always 0-indexed.
     snip_data = cat(3,snips{index});
     n_snips = cellfun(@(C)size(C,3),snips(index));
     nResponses = size(snip_data,3);
+	if nResponses > options.NMaxSnippets
+		i_subset = randsample(nResponses, options.NMaxSnippets, false);
+		i_subset = sort(i_subset,'ascend');
+		nOrig = nResponses;
+		snip_data = snip_data(:,:,i_subset);
+		nResponses = options.NMaxSnippets;
+		headerText = sprintf("RANDOM: %d/%d", nResponses, nOrig);
+	else
+		headerText = sprintf("ALL: %d", nResponses);
+	end
     yOffset = 0:options.YOffset:(options.YOffset*(nResponses-1));
     
 
@@ -89,7 +99,7 @@ for iT = 1:size(TID,1)
             'FontName','Tahoma','Color',[0.65 0.65 0.65]);
         fig(iT).UserData.Subtitle = options.Subtitle;
     else
-        subtxt = sprintf('%d-Hz (%d\\muA - %d\\muA)',TID.frequency(iT),Tsub.intensity(1),Tsub.intensity(end));
+        subtxt = sprintf('%s | %d-Hz (%d\\muA - %d\\muA)',headerText,TID.frequency(iT),Tsub.intensity(1),Tsub.intensity(end));
         subtitle(L,subtxt, ...
             'FontName','Tahoma','Color',[0.65 0.65 0.65]);
         fig(iT).UserData.Subtitle = subtxt;

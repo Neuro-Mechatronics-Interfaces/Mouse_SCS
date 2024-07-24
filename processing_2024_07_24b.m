@@ -1,4 +1,4 @@
-%PROCESSING_2024_07_24a  Processing associated with 2024-07-24a procedure.
+%PROCESSING_2024_07_24b  Processing associated with 2024-07-24b procedure.
 %#ok<*UNRCH>
 close all force;
 clc;
@@ -10,12 +10,17 @@ SUBJ = "Pilot_SCS_N_CEJ_12";
 YYYY = 2024;
 MM = 7;
 DD = 24;
-SWEEP = 0;
+% SWEEP = 33; % Wrist/Triceps 5&7
+% SWEEP = 34; % Wrist/Triceps 6&8
+% SWEEP = 35; % Triceps/Wrist 4&6
+SWEEP = 36; % Deltoid 2&4 high intensity 40-Hz
+% SWEEP = 37; % Deltoid 2&4 low intensity 40-Hz
+% SWEEP = 38; % Deltoid 2&4 lowest intensity 100-Hz
 TAG = 'b';
 
 PLOT_ALL_FDATA = false;
 PLOT_RECRUITMENT = true;
-EXPORT_PULSE_RECRUITMENT_SCATTERS = false;
+EXPORT_PULSE_RECRUITMENT_SCATTERS = true;
 
 % RAW_DATA_ROOT = "C:/Data/SCS";
 RAW_DATA_ROOT = parameters('raw_data_folder_root');
@@ -146,9 +151,20 @@ for iSweep = SWEEP
         uFrequency = unique(T.frequency);
         
         batch_export_pulse_recruitment(uIntensity, uFrequency, muscle, T, response, 'CData', cdata);
-        for ii = 1:numel(uFrequency)
-            for ik = 1:numel(uIntensity)
-                for iM = 1:numel(muscle)
+        for iM = 1:numel(muscle)
+            slideId = pptx.addSlide();
+            pptx.addTextbox(num2str(slideId), ...
+                    'Position',[4 7 0.5 0.5], ...
+                    'VerticalAlignment','bottom', ...
+                    'HorizontalAlignment','center', ...
+                    'FontSize', 10);
+            pptx.addTextbox(muscle(iM), ...
+                    'Position',[0 3.5 10 1.5], ...
+                    'FontName', 'Tahoma', ...
+                    'HorizontalAlignment', 'center', ...
+                    'FontSize', 36);
+            for ii = 1:numel(uFrequency)
+                for ik = 1:numel(uIntensity)
                     slideId = pptx.addSlide();
                     pptx.addTextbox(num2str(slideId), ...
                         'Position',[4 7 0.5 0.5], ...
