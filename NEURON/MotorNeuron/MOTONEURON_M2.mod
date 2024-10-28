@@ -127,14 +127,17 @@ PROCEDURE evaluate_fct(v (mV)) { LOCAL a, b, v2
     :m
     a = alpham(v)
     b = betam(v)
-    tau_m = 1 / (a + b)
+    : tau_m = 1 / (a + b) : original
+	tau_m = (1 / (a + b)) / 4 : updated
     m_inf = a / (a + b)
     :h
-    tau_h = 30 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16))
+    : tau_h = 30 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : original
+	tau_h = 8 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : updated
     h_inf = 1 / (1 + Exp((v + 65) / 7))
 
     :DELAYED RECTIFIER POTASSIUM
-    tau_n = 5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50))
+    : tau_n = 5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)) : original
+	tau_n = (5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)))/2 : updated
     n_inf = 1 / (1 + Exp(-(v + 38) / 15))
 
     :CALCIUM DYNAMICS

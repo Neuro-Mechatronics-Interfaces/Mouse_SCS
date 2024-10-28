@@ -432,11 +432,11 @@ static int  evaluate_fct ( _threadargsprotocomma_ double _lv ) {
    double _la , _lb , _lv2 ;
  _la = alpham ( _threadargscomma_ _lv ) ;
    _lb = betam ( _threadargscomma_ _lv ) ;
-   tau_m = 1.0 / ( _la + _lb ) ;
+   tau_m = ( 1.0 / ( _la + _lb ) ) / 4.0 ;
    m_inf = _la / ( _la + _lb ) ;
-   tau_h = 30.0 / ( Exp ( _threadargscomma_ ( _lv + 60.0 ) / 15.0 ) + Exp ( _threadargscomma_ - ( _lv + 60.0 ) / 16.0 ) ) ;
+   tau_h = 8.0 / ( Exp ( _threadargscomma_ ( _lv + 60.0 ) / 15.0 ) + Exp ( _threadargscomma_ - ( _lv + 60.0 ) / 16.0 ) ) ;
    h_inf = 1.0 / ( 1.0 + Exp ( _threadargscomma_ ( _lv + 65.0 ) / 7.0 ) ) ;
-   tau_n = 5.0 / ( Exp ( _threadargscomma_ ( _lv + 50.0 ) / 40.0 ) + Exp ( _threadargscomma_ - ( _lv + 50.0 ) / 50.0 ) ) ;
+   tau_n = ( 5.0 / ( Exp ( _threadargscomma_ ( _lv + 50.0 ) / 40.0 ) + Exp ( _threadargscomma_ - ( _lv + 50.0 ) / 50.0 ) ) ) / 2.0 ;
    n_inf = 1.0 / ( 1.0 + Exp ( _threadargscomma_ - ( _lv + 38.0 ) / 15.0 ) ) ;
    tau_mc = 15.0 ;
    mc_inf = 1.0 / ( 1.0 + Exp ( _threadargscomma_ - ( _lv + 32.0 ) / 5.0 ) ) ;
@@ -868,14 +868,17 @@ static const char* nmodl_file_text =
   "    :m\n"
   "    a = alpham(v)\n"
   "    b = betam(v)\n"
-  "    tau_m = 1 / (a + b)\n"
+  "    : tau_m = 1 / (a + b) : original\n"
+  "	tau_m = (1 / (a + b)) / 4 : updated\n"
   "    m_inf = a / (a + b)\n"
   "    :h\n"
-  "    tau_h = 30 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16))\n"
+  "    : tau_h = 30 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : original\n"
+  "	tau_h = 8 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : updated\n"
   "    h_inf = 1 / (1 + Exp((v + 65) / 7))\n"
   "\n"
   "    :DELAYED RECTIFIER POTASSIUM\n"
-  "    tau_n = 5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50))\n"
+  "    : tau_n = 5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)) : original\n"
+  "	tau_n = (5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)))/2 : updated\n"
   "    n_inf = 1 / (1 + Exp(-(v + 38) / 15))\n"
   "\n"
   "    :CALCIUM DYNAMICS\n"
