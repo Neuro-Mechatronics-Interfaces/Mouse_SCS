@@ -25,7 +25,7 @@ else
     colorData = options.CData;
 end
 
-if (numel(options.Marker)==1) && (numel(muscle) > 1)
+if isscalar(options.Marker) && (numel(muscle) > 1)
     markerData = repmat(options.Marker,1,numel(muscle));
 else
     markerData = options.Marker;

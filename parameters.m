@@ -20,8 +20,10 @@ function varargout = parameters(varargin)
 
 pars = struct;
 % % % Trying to pull the "relevant" ones to the top ... % % %
-pars.generated_data_folder = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/generated_data';
-pars.raw_data_folder_root = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/raw_data';
+% pars.generated_data_folder = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/generated_data';
+pars.generated_data_folder = 'C:/Data/Test/generated_data';
+% pars.raw_data_folder_root = 'G:/Shared drives/NML_Rodent/NeuroMechLab/Mouse_SCS/raw_data';
+pars.raw_data_folder_root = 'C:/Data/Test/raw_data';
 pars.local_export_folder = strrep(fullfile(pwd,'export'),'\','/');
 
 % Frank-specific parameters

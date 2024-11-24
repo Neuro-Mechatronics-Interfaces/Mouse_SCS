@@ -63,7 +63,11 @@ if options.UseAM4100
         'IntanClient', options.IntanClient);
 else
     if options.UseIntan
-        intan_client = tcpclient(options.AddressIntan, options.PortIntan);
+        if isempty(options.IntanClient)
+            intan_client = tcpclient(options.AddressIntan, options.PortIntan);
+        else
+            intan_client = options.IntanClient;
+        end
         timer_obj = timer(...
             'TimerFcn', @(~,~)INTAN_stop(intan_client, logger), ...
             'StartDelay', 20);
