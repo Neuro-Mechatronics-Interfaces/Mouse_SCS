@@ -7,6 +7,7 @@ extern void _AXNODE_reg();
 extern void _INITIAL_reg();
 extern void _MOTONEURON_reg();
 extern void _MOTONEURON_5HT_reg();
+extern void _MOTONEURON_FF_reg();
 extern void _MOTONEURON_M2_reg();
 
 void modl_reg(){
@@ -18,6 +19,7 @@ fprintf(stderr," AXNODE.mod");
 fprintf(stderr," INITIAL.mod");
 fprintf(stderr," MOTONEURON.mod");
 fprintf(stderr," MOTONEURON_5HT.mod");
+fprintf(stderr," MOTONEURON_FF.mod");
 fprintf(stderr," MOTONEURON_M2.mod");
 fprintf(stderr, "\n");
     }
@@ -25,5 +27,6 @@ _AXNODE_reg();
 _INITIAL_reg();
 _MOTONEURON_reg();
 _MOTONEURON_5HT_reg();
+_MOTONEURON_FF_reg();
 _MOTONEURON_M2_reg();
 }

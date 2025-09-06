@@ -1,69 +1,81 @@
 // Load necessary libraries and files
 load_file("nrngui.hoc")
 
-// Define soma and dendrites
-create soma, dend[3]
+// Define sections
+create soma, dend[3], ais, axon
 
+// ----- Biophysics -----
 soma {
-    L = 30 // length
-    diam = 40 // diameter
-	insert motoneuron_m2 // insert motor neuron properties
+  L = 30
+  diam = 40
+  insert motoneuron_ff  // FF phenotype
+  // Optional FF tuning knobs (uncomment/tune as desired)
+  // gnabar_motoneuron_ff = 0.09
+  // gkrect_motoneuron_ff = 0.40
+  // gcaN_motoneuron_ff   = 0.02
+  // gcaL_motoneuron_ff   = 0.0004
+  // gcak_motoneuron_ff   = 0.60
+  // tau_p_motoneuron_ff  = 500
+  // alpha_ca_motoneuron_ff = 0.02
+  // k_cleak_motoneuron_ff  = 0.5
 }
 
-for i=0,2 {
-    dend[i] {
-        L = 25
-        diam = 1
-        nseg = 5
-		insert pas
-		gnabar = 0.005
-    }
+ais {
+  L = 30      // ~20–40 µm common
+  diam = 1.2  // ~0.8–1.5 µm
+  nseg = 3
+  insert initial           // keep same AIS params you had
+  // (optionally) tweak AIS:
+  // gnabar_initial = 0.5
+  // gnap_initial   = 0.01
+  // gkrect_initial = 0.1
+  // gl_initial     = 0.01
 }
 
-// Connect dendrites to the soma
-connect dend[0](0), soma(1)
-connect dend[1](0), soma(1)
-connect dend[2](0), soma(1)
-
-
-create axon
 axon {
-    L = 1000
-    diam = 2
-	insert motoneuron_m2
+  L = 1000
+  diam = 2
+  nseg = 101
+  insert motoneuron_ff
+  gnabar_motoneuron_ff = 0.30  // your prior axonal Na boost
 }
-axon.gnabar_motoneuron_m2 = 0.3
-// Connect axon to the soma
-connect soma(0), axon(1)
 
+// Wiring: soma -> AIS -> axon
+connect ais(0),  soma(1)
+connect axon(0), ais(1)
+
+// Dendrites
+for i=0,2 {
+  dend[i] {
+    L = 25
+    diam = 1
+    nseg = 5
+    insert pas
+    g_pas = 0.0005     // <-- use g_pas (not gnabar)
+    e_pas = -70
+  }
+}
+
+// Connect dendrites to soma
+connect dend, soma(1)
+connect dend, soma(1)
+connect dend, soma(1)
+
+// ----- Synapses & Stims -----
 objref syn0, syn1, syn2, stim0, stim1, stim2
 
-dend[0] {
-    syn0 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-	syn0.e = -80 // IPSP
-}
-dend[1] {
-    syn1 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-	syn1.e = -80 // IPSP
-}
-dend[2] {
-    syn2 = new Exp2Syn(0.5) // use the synaptic mechanism from the mod files
-	syn2.e = 0 // EPSP
-}
+dend[0] { syn0 = new Exp2Syn(0.5)  syn0.e = -80 }  // IPSP
+dend[1] { syn1 = new Exp2Syn(0.5)  syn1.e = -80 }  // IPSP
+dend[2] { syn2 = new Exp2Syn(0.5)  syn2.e =   0 }  // EPSP
 
-// Stimulus to generate EPSPs at a specified rate
-stim0 = new NetStim(0.5)
-stim0.start = 50 // start time in ms
-stim0.noise = 0 // no variability in spike timing
+stim0 = new NetStim()
+stim1 = new NetStim()
+stim2 = new NetStim()
+stim0.noise = 0
+stim1.noise = 0
+stim2.noise = 0
+stim0.start = 50
 
-stim1 = new NetStim(0.5)
-stim1.noise = 0 // no variability in spike timing
-
-stim2 = new NetStim(0.5)
-stim2.noise = 0 // no variability in spike timing
-
-
-// Connect stimulus to synapse
 objref nc00, nc01, nc02, nc10, nc11, nc12, nc20, nc21, nc22
 nc00 = new NetCon(stim0, syn0)
 nc01 = new NetCon(stim0, syn1)
@@ -75,150 +87,123 @@ nc20 = new NetCon(stim2, syn0)
 nc21 = new NetCon(stim2, syn1)
 nc22 = new NetCon(stim2, syn2)
 
-// Record time and voltage
+// ----- Recording -----
 objref tvec, vvec
 tvec = new Vector()
 vvec = new Vector()
 tvec.record(&t)
 vvec.record(&axon.v(0.5))
 
+// ----- Sweep controls -----
 freq = 10
-m2_cur = 0.5
 leak_cur = 0.0
-w0 = 1
-w1 = 1
-w2 = 1
+w0 = 1  w1 = 1  w2 = 1
 blending = 0.0
 tstop = 1000
 dt = 0.025
 
-// Function to run the simulation and record voltage
+// Run once per condition
 proc run_simulation() {
-    soma.gl_motoneuron_m2 = leak_cur // Set the leak level
-    soma.m2_modulation_motoneuron_m2 = m2_cur // Set the m2 modulation level
-    stim0.interval = 9000 / freq // Set the stimulation frequency
-    stim0.number = freq
-	stim0.start = 50
-	nc00.weight[0] = w0
-	nc01.weight[0] = 0
-	nc02.weight[0] = 0.25 * blending * w0
-    stim1.interval = 9000 / freq
-    stim1.start = 50 + 1000 / freq
-    stim1.number = freq
-	nc10.weight[0] = 0
-	nc11.weight[0] = w1
-	nc12.weight[0] = blending * w1
-    stim2.interval = 9000 / freq
-    stim2.start = 50 + 2000 / freq
-    stim2.number = freq
-	nc20.weight[0] = 0
-	nc21.weight[0] = 0
-	nc22.weight[0] = w2
-	
+    // Set leak on the FF mechanism at soma
+    soma.gl_motoneuron_ff = leak_cur
+    // (Removed m2_modulation_motoneuron_m2 — not in FF mech)
 
-    // Initialize and run the simulation
+    // Stims by phase
+    stim0.interval = 9000 / freq
+    stim0.number   = freq
+    stim0.start    = 50
+    nc00.weight[0] = w0
+    nc01.weight[0] = 0
+    nc02.weight[0] = 0.25 * blending * w0
+
+    stim1.interval = 9000 / freq
+    stim1.start    = 50 + 1000 / freq
+    stim1.number   = freq
+    nc10.weight[0] = 0
+    nc11.weight[0] = w1
+    nc12.weight[0] = blending * w1
+
+    stim2.interval = 9000 / freq
+    stim2.start    = 50 + 2000 / freq
+    stim2.number   = freq
+    nc20.weight[0] = 0
+    nc21.weight[0] = 0
+    nc22.weight[0] = w2
+
+    // Clear previous traces before this run
+    tvec.resize(0)
+    vvec.resize(0)
+
     finitialize(-65)
     run()
 }
 
-// Sweep through frequencies
+// ----- Sweeps (unchanged except for mechanism names above) -----
 objref blend_levels, m2_levels, leak_levels, frequencies, w0_levels, w1_levels, w2_levels
-leak_levels = new Vector() // 2 leak current levels
-leak_levels.append(0.002) // from Capogrosso/Formento model 2016
-leak_levels.append(0.007) // McIntyre/Grill 2002
-m2_levels = new Vector() // 2 modulation levels
+leak_levels = new Vector()
+leak_levels.append(0.002)
+leak_levels.append(0.007)
+
+m2_levels = new Vector()
 m2_levels.append(0.1)
 m2_levels.append(1.0)
 m2_levels.append(10.0)
-blend_levels = new Vector() // 3 blend levels
+
+blend_levels = new Vector()
 blend_levels.append(0.0)
 blend_levels.append(0.2)
 blend_levels.append(0.5)
-frequencies = new Vector() // 9 frequencies
-// frequencies.append(1)
-// frequencies.append(5)
+
+frequencies = new Vector()
 frequencies.append(10)
 frequencies.append(30)
 frequencies.append(50)
 frequencies.append(100)
 
-// 4 combinations of stim pulse sequencing weights
-w0_levels = new Vector()
-w1_levels = new Vector()
-w2_levels = new Vector()
-// "Constant" sweep
-w0_levels.append(30)
-w1_levels.append(30)
-w2_levels.append(30)
-// "Increasing" sweep
-w0_levels.append(10)
-w1_levels.append(30)
-w2_levels.append(50)
-// "Up-Down" sweep
-w0_levels.append(20)
-w1_levels.append(50)
-w2_levels.append(20)
-// "Decreasing" sweep
-w0_levels.append(50)
-w1_levels.append(30)
-w2_levels.append(10)
+// Pulse sequencing weights
+w0_levels = new Vector()  w1_levels = new Vector()  w2_levels = new Vector()
+w0_levels.append(30)  w1_levels.append(30)  w2_levels.append(30)  // Constant
+w0_levels.append(10)  w1_levels.append(30)  w2_levels.append(50)  // Increasing
+w0_levels.append(20)  w1_levels.append(50)  w2_levels.append(20)  // Up-Down
+w0_levels.append(50)  w1_levels.append(30)  w2_levels.append(10)  // Decreasing
 
-
+// Save metadata (as before)
 objref frout, m2out, leakout, blendout
 proc save_metadata() {
-	frout = new File()
-	frout.wopen("out/frequencies.dat")
-	frequencies.printf(frout, "%g\n")
-	frout.close()
-	m2out = new File()
-	m2out.wopen("out/m2_levels.dat")
-	m2_levels.printf(m2out, "%g\n")
-	m2out.close()
-	leakout = new File()
-	leakout.wopen("out/leak_levels.dat")
-	leak_levels.printf(leakout, "%g\n")
-	leakout.close()
-	blendout = new File()
-	blendout.wopen("out/blending_levels.dat")
-	blend_levels.printf(blendout, "%g\n")
-	blendout.close()
+  frout = new File()   frout.wopen("out/frequencies.dat")   frequencies.printf(frout, "%g\n")   frout.close()
+  m2out = new File()   m2out.wopen("out/m2_levels.dat")     m2_levels.printf(m2out, "%g\n")     m2out.close()
+  leakout = new File() leakout.wopen("out/leak_levels.dat") leak_levels.printf(leakout, "%g\n") leakout.close()
+  blendout = new File() blendout.wopen("out/blending_levels.dat") blend_levels.printf(blendout, "%g\n") blendout.close()
 }
-
 save_metadata()
 
+// Run all conditions and export
 objref vout, tout
 for c = 0, w2_levels.size()-1 {
-	for l = 0, leak_levels.size()-1 {
-		leak_cur = leak_levels.x[l]
-		for k = 0, m2_levels.size()-1 {
-			m2_cur = m2_levels.x[k]
-			for i = 0, frequencies.size()-1 {
-				for bl = 0, blend_levels.size()-1 {
-					freq = frequencies.x[i]
-					blending = blend_levels.x[bl]
-					w0 = w0_levels.x[c]
-					w1 = w1_levels.x[c]
-					w2 = w2_levels.x[c]
-					run_simulation()
-					// Save the recorded voltage data to a file
-					strdef filename_voltage, filename_time
-					sprint(filename_voltage, "out/voltage_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", w0, w1, w2, leak_cur, m2_cur, blending, freq)
-					sprint(filename_time, "out/time_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", w0, w1, w2, leak_cur, m2_cur, blending, freq) 
-					vout = new File()
-					vout.wopen(filename_voltage) // Overwrite mode (recreate the file each time)
-					vvec.printf(vout, "%g\n")
-					vout.close()
-					// Save recorded times to a file
-					tout = new File()
-					tout.wopen(filename_time) // Write mode (create/overwrite file)
-					tvec.printf(tout, "%g\n")
-					tout.close()
-				}
-			}
-		}
-	}
+  for l = 0, leak_levels.size()-1 {
+    leak_cur = leak_levels.x[l]
+    for k = 0, m2_levels.size()-1 {
+      m2_cur = m2_levels.x[k]     // kept for filenames; not used by FF mech
+      for i = 0, frequencies.size()-1 {
+        for bl = 0, blend_levels.size()-1 {
+          freq     = frequencies.x[i]
+          blending = blend_levels.x[bl]
+          w0 = w0_levels.x[c]
+          w1 = w1_levels.x[c]
+          w2 = w2_levels.x[c]
+
+          run_simulation()
+
+          // Save traces
+          strdef filename_voltage, filename_time
+          sprint(filename_voltage, "out/voltage_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", w0, w1, w2, leak_cur, m2_cur, blending, freq)
+          sprint(filename_time,    "out/time_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",    w0, w1, w2, leak_cur, m2_cur, blending, freq)
+          vout = new File()  vout.wopen(filename_voltage)  vvec.printf(vout, "%g\n")  vout.close()
+          tout = new File()  tout.wopen(filename_time)     tvec.printf(tout, "%g\n")  tout.close()
+        }
+      }
+    }
+  }
 }
-
-
 
 quit()

@@ -9,7 +9,7 @@ arguments
     options.CloseExisting (1,1) logical = true;
     options.ClearCommandWindow (1,1) logical = true;
     options.SaveFolder {mustBeTextScalar} = 'export/NEURON';
-    options.DeckName {mustBeTextScalar} = 'M2-Modulation';
+    options.DeckName {mustBeTextScalar} = 'FF-Modulation';
     options.PulseType (1,3) {mustBeMember(options.PulseType, {'b-.', 'r--'})} = {'b-.', 'b-.', 'r--'}; % Blue for IPSP; Red for EPSP
 end
 
