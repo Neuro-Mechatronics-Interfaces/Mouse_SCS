@@ -27,6 +27,8 @@ NEURON {
     RANGE p_inf, m_inf, h_inf, n_inf, mc_inf, hc_inf
     RANGE tau_p, tau_m, tau_h, tau_n, tau_mc, tau_hc, tau_ca
     RANGE m2_modulation, tau_m_gain, tau_h_gain, tau_n_gain
+    RANGE gcaL, gcaL_pic, pic_ton, pic_tau, kdrop
+    RANGE pic_gate
 }
 
 UNITS {
@@ -62,6 +64,10 @@ PARAMETER {
     tau_h_gain = 1 (1) <0,2> : <0,2> dimensionless
     tau_n_gain = 1 (1) <0,2> : <0,2> dimensionless
     tau_ca = 20 (ms) <10, 200> : calcium removal time constant
+    gcaL_pic = 0.001  (mho/cm2)   : stronger L-type once PIC is "on"
+    pic_ton  = 10000  (ms)        : time (ms) when PIC starts turning on; default never turns it on.
+    pic_tau  = 5      (ms)        : smoothness of the switch
+    kdrop    = 0      (1) <0,1>   : optional fractional drop of Kdr after PIC onset
 }
 
 STATE {
@@ -94,12 +100,16 @@ ASSIGNED {
     tau_n
     tau_mc
     tau_hc
+    pic_gate (1)
 }
 
 BREAKPOINT {
     SOLVE states METHOD cnexp
+    pic_gate = 1 / (1 + Exp(-(t - pic_ton)/pic_tau))
     ina = gnabar * m*m*m*h*(v - ena)
-    ikrect = gkrect * (1 / (Exp(m2_modulation))) *n*n*n*n* (v - ek)  : m2_modulation in [0..1]
+    : ikrect = gkrect * (1 / (Exp(m2_modulation))) *n*n*n*n* (v - ek)  : m2_modulation in [0..1]
+    ikrect = gkrect * (1 - kdrop*pic_gate) * (1 / (Exp(m2_modulation))) * n*n*n*n* (v - ek) : m2_modulation + kdrop/gate
+
     il = gl * (v - el)
     : Guard Eca against tiny cai to avoid log(ca0/0) -> inf
     if (cai <= 1e-6) {
@@ -108,7 +118,8 @@ BREAKPOINT {
         Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai)
     }
     icaN = gcaN * mc*mc * hc * (v - Eca)
-    icaL = gcaL * p * (v - Eca)
+    : icaL = gcaL * p * (v - Eca) : original
+    icaL = (gcaL + (gcaL_pic - gcaL)*pic_gate) * p * (v - Eca)
     ikca = gcak * (cai*cai) / (cai*cai + 0.014*0.014) * (v - ek)
 }
 

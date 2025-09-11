@@ -2,33 +2,23 @@
 // Sweeps M2 modulation, Cell diameter, and Calcium Clearance time-constant values for different current clamp amplitudes. 
 load_file("stdrun.hoc")
 
-// loads{ 
-//  proc: [progress_tick(), progress_init()]; 
-//  func: [nconds()]; 
-//  vars: [t0, elapsed, per_iter, eta]; 
-//  strdef: [bar, msg] }
+// progress_utils.hoc:
+//  loads{ 
+//    proc: [progress_tick(), progress_init()]; 
+//    func: [nconds()]; 
+//    vars: [t0, elapsed, per_iter, eta]; 
+//    strdef: [bar, msg] }
 load_file("progress_utils.hoc") 
 
 // ---------- sim controls ----------
 dt     = 0.025 // ms
-tstop  = 1000 // ms
+tstop  = 1200 // ms
 v_init = -70 // mV
 lo = 0   // nA (rheobase search)
 current_step = 0.1 // nA
-hi = 10   // nA (rheobase search)
+hi = 12   // nA (rheobase search)
 runidx = 0 // (for tracking progress)
 total_runs = 0 // (initialize in run_all)
-
-// ---------- optional quick plots ----------
-show_gatecurve_plot = 0  // set to 1 for gate-curve dynamics plots as function of membrane voltage
-show_fi_plot = 0 // set to 1 for current injection strength (x) vs evoked spike rate (y) plots
-show_trace_plot = 0   // set to 1 for standard time membrane-voltage plot of soma
-Y0_v = -100 // (mV) y-lower bound for overlay trace plots
-Y1_v = 60 // (mV) y-upper bound for overlay trace plots
-g_trace_idx = 0
-g_ta_idx = 0
-g_ss_idx = 0
-g_fi_idx = 0
 
 // ---------- Window layout (pixels) ----------
 // trace (wide)
@@ -51,6 +41,9 @@ TA_LEFT  = 650
 TA_TOP  = 500   
 TA_W = 520   
 TA_H = 300 
+// Time-Amplitude axes scaling
+Y0_v = -100 // (mV) y-lower bound for overlay trace plots
+Y1_v = 60 // (mV) y-upper bound for overlay trace plots
 
 // ----- Top-Level Object References -----
 objref vgrid, minf, hinf, ninf, taum, tauh, taun
@@ -60,10 +53,22 @@ objref stim, amps, rates
 objref tvec, vvec, caivec
 objref ca_scaled
 objref spk_t, nc_spike, nil  
-objref m2vals, diams, taucas
-strdef fname_gate, fname_fi, fname_trace, s_join
-strdef g_trace_lab, g_ca_lab, g_fi_lab, g_gate_lab
+objref m2vals, diams, taucas, pictons
+strdef fname_gate, fname_fi, fname_trace, fname_meta
+strdef s_join, s_cmd
+strdef g_trace_lab, g_ca_lab, g_fi_lab, g_gate_lab, g_pic_lab
+strdef outdir
 
+// ------ COMMAND LINE arguments ---------
+if (!name_declared("show_gc_plot")) show_gc_plot  = 0 // set to 1 for gate-curve dynamics plots as function of membrane voltage
+if (!name_declared("show_fi_plot")) show_fi_plot = 0 // set to 1 for current injection strength (x) vs evoked spike rate (y) plots
+if (!name_declared("show_trace_plot")) show_trace_plot = 0 // set to 1 for standard time membrane-voltage plot of soma
+if (!name_declared("show_geometry_cli")) show_geometry_cli = 0 // set to 1 to print the geometry for current simulation each update
+if (!name_declared("outdir")) {
+  outdir = "out_m2qa"
+} else if (strcmp(outdir, "") == 0) {
+  outdir = "out_m2qa"
+}
 
 // ---------- cell: single soma with your mechanism ----------
 create soma
@@ -81,10 +86,9 @@ nc_spike.threshold = -10                  // mV
 nc_spike.record(spk_t)                    // spike times go into spk_t
 
 
-// ---------- sweep over m2_modulation ----------
+// ---------- sweep grid ----------
 m2vals = new Vector()
-m2vals.append(0)      // full gKrect (no M2)
-m2vals.append(0.25)   
+m2vals.append(0)         
 m2vals.append(0.5)    
 
 diams = new Vector()
@@ -97,10 +101,15 @@ taucas.append(10)
 taucas.append(20) 
 taucas.append(40)  
 
+pictons = new Vector()
+pictons.append(10000)   // 10000 ms ~ effectively "no PIC" with default
+pictons.append(850)     // PIC late in the clamp
+pictons.append(350)     // PIC early in the clamp
+
 // ---------- helpers ----------
 proc ensure_outdir() { local ret
-  // Windows-friendly; harmless if it exists
-  system("mkdir out_m2qa")
+  sprint(s_cmd, "mkdir \"%s\"", outdir) 
+  system(s_cmd)
 }
 
 proc set_soma_geom() { local d
@@ -109,9 +118,9 @@ proc set_soma_geom() { local d
     diam = d     // µm
     L    = d     // simple “isopotential soma” cylinder; nseg=1 already set
   }
-  // optional: print area and an ohmic Rin estimate from leak density
-  // (assumes your mechanism exposes gl as a RANGE, e.g., gl_motoneuron_m2)
-  printf("geom: diam=%g um, L=%g um, area=%.0f um^2\n", d, d, area(0.5))
+  if (show_geometry_cli==1) {
+    printf("geom: diam=%g um, L=%g um, area=%.0f um^2\n", d, d, area(0.5))
+  }
 }
 
 // ---------- SAFE graph helpers ----------
@@ -147,19 +156,17 @@ proc init_graphs() {
     g_trace.view(0, Y0_v, tstop, Y1_v - Y0_v, TR_LEFT, TR_TOP, TR_W, TR_H)
     g_trace.label(.05, .95, "Time–Voltage")
     g_trace.exec_menu("View = plot")
-    g_trace_idx = 0
     if (graphList[0].index(g_trace) == -1) {
       graphList[0].append(g_trace)   // tells stdrun “use THIS as the voltage axis”
     }
   }
 
-  if (show_gatecurve_plot == 1) {
+  if (show_gc_plot == 1) {
     _maybe_unmap(g_ss)
     _ensure_graph(g_ss)
     g_ss.view(-90, 0, 130, 1, SS_LEFT, SS_TOP, SS_W, SS_H)     // V in [-90..40], y [0..1]
     g_ss.label(.08, .92, "Gating steady-state")
     g_ss.exec_menu("View = plot")
-    g_ss_idx = show_trace_plot
     if (graphList[0].index(g_ss) == -1) {
       graphList[0].append(g_ss)   // tells stdrun “use THIS as the voltage axis”
     }
@@ -169,7 +176,6 @@ proc init_graphs() {
     g_ta.view(-90, 0, 130, 100, TA_LEFT, TA_TOP, TA_W, TA_H)   // V in [-90..40], tau up to ~100 ms
     g_ta.label(.08, .92, "Gating time constants (ms)")
     g_ta.exec_menu("View = plot")
-    g_ta_idx = show_trace_plot+1
     if (graphList[0].index(g_ta) == -1) {
       graphList[0].append(g_ta)   // tells stdrun “use THIS as the voltage axis”
     }
@@ -181,7 +187,6 @@ proc init_graphs() {
     g_fi.view(0, 0, 2*hi, 100, FI_LEFT, FI_TOP, FI_W, FI_H)    // x: 0..2*hi (nA), y: 0..100 Hz
     g_fi.label(.10, .92, "f–I (nA vs Hz)")
     g_fi.exec_menu("View = plot")
-    g_fi_idx = show_trace_plot + 2*show_gatecurve_plot
     if (graphList[0].index(g_fi)==-1) {
       graphList[0].append(g_fi)
     }
@@ -194,8 +199,8 @@ proc plot_last_trace_in_main() {
   g_main.size(0, tstop, Y0_v, Y1_v)
   vvec.line(g_main, tvec, 1, 1)
   // overlay_ca_on_trace(Y0_v, Y1_v)   // if you want the Ca overlay
-  sprint(g_trace_lab, "Time–Voltage  M2=%g | Diam=%g µm | tau_ca=%g ms | I=%g nA", \
-         soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, stim.amp)
+  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms  |  I=%g nA", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
   g_main.label(.05, .92, g_trace_lab)
   // g_main.exec_menu("View = plot")
 }
@@ -205,8 +210,8 @@ proc plot_fi_in_main() {
   g_main.erase_all()
   g_main.view(50, 50, 1100, 420, 0, 0, 2*hi, 100)  // remap world box for f–I
   rates.line(g_main, amps, 1, 1)
-  sprint(g_fi_lab, "f–I (nA vs Hz)  M2=%g | Diam=%g µm | tau_ca=%g ms", \
-         soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2)
+  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
   g_main.label(.10, .92, g_fi_lab)
   // g_main.exec_menu("View = plot")
 }
@@ -246,7 +251,9 @@ proc plot_last_trace() { local n, t1
   vvec.line(g_trace, tvec, 1, 1)  
   // Overlay Ca (scaled into voltage axis) with right-side scale annotation
   // overlay_ca_on_trace(Y0_v, Y1_v)
-  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  I=%g nA", soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, stim.amp)
+  // in plot_last_trace()
+  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms  |  I=%g nA", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
   g_trace.label(.1,.92, g_trace_lab)
   // g_trace.exec_menu("View = plot")
 }
@@ -291,7 +298,7 @@ proc gatecurves() { local i, vset, n, v_init_save
     }
     
     write_gatecurves()
-    if (show_gatecurve_plot == 1) { 
+    if (show_gc_plot == 1) { 
         plot_gatecurves()  
     }
     // restore original init voltage and states
@@ -302,8 +309,8 @@ proc gatecurves() { local i, vset, n, v_init_save
 // ---------- f–I curve ----------
 proc setup_iclamp() {
   soma stim = new IClamp(0.5)
-  stim.del = 100   // ms
-  stim.dur = 800   // ms  -> we’ll compute rate over this window
+  stim.del = 100    // ms
+  stim.dur = 1000   // ms  -> compute rate over this window
   stim.amp = 0
 }
 
@@ -329,7 +336,6 @@ func count_spikes_between() { local i, n, t0, t1, c
 }
 
 proc find_rheobase() { local mid, nspk, t0, t1, k
-  setup_iclamp()
   for k = 0, 10 { // ~binary search
     mid = (lo + hi)/2
     stim.amp = mid
@@ -347,7 +353,7 @@ proc find_rheobase() { local mid, nspk, t0, t1, k
   printf("~Rheobase ~ %g nA (>=2 spikes)\n", hi)
 }
 
-proc run_simulation() { local i, nspk, t0, t1, Amin, Amax, dA, k
+proc run_simulation() { local i, nspk, t0, t1, Amin, Amax, dA, k, counter, ncats
   
   printf(">> diam=%g um, tau_ca=%g ms, m2=%g\n", \
     soma.diam, soma.tau_ca_motoneuron_m2, soma.m2_modulation_motoneuron_m2)
@@ -361,12 +367,11 @@ proc run_simulation() { local i, nspk, t0, t1, Amin, Amax, dA, k
   amps  = new Vector()
   rates = new Vector()
 
-  // widen the sweep; adjust as needed
-  k = (soma.diam / 40)
-  Amin = lo
-  Amax = hi * k    // nA (try 3.0 if still no repetitive firing)
-  dA   = current_step*k  // nA step
-
+  // --- CORE F-I SWEEP ---
+  k = (soma.diam / 40)         // heuristic to set current limits to avoid lots of sweeps with 0 spikes
+  Amin = lo                    // nA current-curve lower-bound
+  Amax = hi * k * k            // nA current-curve upper-bound
+  dA   = current_step * k * k  // nA step
   for (i = Amin; i <= Amax; i += dA) {
     stim.amp = i
     tvec.resize(0)
@@ -380,25 +385,24 @@ proc run_simulation() { local i, nspk, t0, t1, Amin, Amax, dA, k
         plot_last_trace()
     }
 
-    // count strictly within the stimulus window, skipping a small onset margin
-    t0 = stim.del + 10
-    t1 = stim.del + stim.dur - 10
+    // count strictly within the stimulus window
+    t0 = stim.del
+    t1 = stim.del + stim.dur
     nspk = count_spikes_between(t0, t1)
     amps.append(stim.amp)
-    rates.append( nspk / ((t1 - t0)/1000) )  // Hz
-
-    // track progres
+    rates.append( nspk / ((t1 - t0)/1000) )  // spikes per second
+    // track progress
     runidx = runidx + 1
     progress_tick(runidx, total_runs)
   }
   if (show_fi_plot) {
     plot_fi()
   }
-  write_FI()
+  write_fi()
 }
 
 proc plot_gatecurves() {
-  if (show_gatecurve_plot==0) return
+  if (show_gc_plot==0) return
 
   // Steady-state gates vs V
   // color indices are 1..n; use 1,2,3 for variety
@@ -426,15 +430,17 @@ proc plot_gatecurves() {
 proc plot_fi() {
   if (show_fi_plot==0) return
   rates.line(g_fi, amps, 1, 1)   // x = amps (nA), y = rates (Hz)
-  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  I=%g nA", \
-    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, stim.amp)
+  // in plot_fi()
+  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
   g_fi.label(.1,.92, g_fi_lab)
   // g_fi.exec_menu("View = plot")
 }
 
 proc write_header_meta() { local k
     f_meta = new File()
-    f_meta.wopen("out_m2qa/readme.txt")
+    sprint(fname_meta, "%s/readme.txt", outdir) 
+    f_meta.wopen(fname_meta)
     f_meta.printf("Sanity QA for motoneuron_m2\n")
     f_meta.printf("dt=%g ms, tstop=%g ms, v_init=%g mV\n", dt, tstop, v_init)
     f_meta.printf("IClamp: del=100 ms, dur=800 ms, amps %g:%g:%g nA\n", lo, current_step, hi)
@@ -447,6 +453,15 @@ proc write_header_meta() { local k
             sprint(s_join, "\n")
         }
         f_meta.printf("%g%s", taucas.x[k], s_join)
+    }
+    f_meta.printf("PIC onset sweep (ms): ")
+    for k = 0, pictons.size()-1 {
+      if (k < pictons.size()-1) {
+        sprint(s_join, ", ")
+      } else {
+        sprint(s_join, "\n")
+      }
+      f_meta.printf("%g%s", pictons.x[k], s_join)
     }
     f_meta.close()
 }
@@ -465,8 +480,8 @@ proc write_gatecurves() { local i, n, ok
     // iterate over the actually-filled length, not vgrid.size()
     n = minf.size()
     if (n == 0) return
-    sprint(fname_gate, "out_m2qa/gate_curves_diam_%g_m2_%g_tauca_%g.tsv", \
-       soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2)
+    sprint(fname_gate, "%s/gate_curves_diam_%g_m2_%g_tauca_%g_picton_%g.tsv", \
+      outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
     f_gate = new File()
     f_gate.wopen(fname_gate)
     f_gate.printf("V_mV\tm_inf\th_inf\tn_inf\tTau_m_ms\tTau_h_ms\tTau_n_ms\n")
@@ -482,8 +497,8 @@ proc write_gatecurves() { local i, n, ok
 proc write_last_trace() { local j, n
   f_trace = new File()
   // Include m2 value and current amplitude in the filename
-  sprint(fname_trace, "out_m2qa/trace_diam_%g_m2_%g_tauca_%g_I_%g.tsv", \
-       soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, stim.amp)
+  sprint(fname_trace, "%s/trace_diam_%g_m2_%g_tauca_%g_picton_%g_I_%g.tsv", \
+    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
   f_trace.wopen(fname_trace)
   f_trace.printf("t_ms\tVsom_mV\tcai_mM\n")
   n = tvec.size()
@@ -493,10 +508,10 @@ proc write_last_trace() { local j, n
   f_trace.close()
 }
 
-proc write_FI() { local i, n 
+proc write_fi() { local i, n 
   f_fi = new File()
-  sprint(fname_fi, "out_m2qa/fI_diam_%g_m2_%g_tauca_%g.tsv", \
-       soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2)
+  sprint(fname_fi, "%s/fI_diam_%g_m2_%g_tauca_%g_picton_%g.tsv", \
+    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
   f_fi.wopen(fname_fi)
   f_fi.printf("I_nA\tRate_Hz\n")
   n = amps.size()
@@ -506,19 +521,20 @@ proc write_FI() { local i, n
   f_fi.close()
 }
 
-func nconds() { local n, m
-    m = (hi - lo)/current_step // number of current amplitudes in each f-i sweep
-    n = m \
-        * diams.size() \
-        * taucas.size() \
-        * m2vals.size()
-    return n
+func nconds() { local m, n
+  m = (hi - lo)/current_step + 1    // include both endpoints
+  n = m \
+    * diams.size() \
+    * taucas.size() \
+    * m2vals.size() \
+    * pictons.size()
+  return n
 }
 
-proc run_all() { local i, j, k, nD, nM, nT
+proc run_all() { local i, j, k, p, nD, nM, nT, nP
+  ensure_outdir()
   total_runs = nconds()
   progress_init(total_runs)
-  ensure_outdir()
   record_vm()
   init_graphs()
   write_header_meta()
@@ -526,20 +542,23 @@ proc run_all() { local i, j, k, nD, nM, nT
   nD = diams.size()
   nM = m2vals.size()
   nT = taucas.size()
+  nP = pictons.size()
 
   for j = 0, nD-1 {
-    set_soma_geom(diams.x[j]) // <-- set soma diameter (effectively: leak)
+    set_soma_geom(diams.x[j])
     for k = 0, nT-1 {
-      soma.tau_ca_motoneuron_m2 = taucas.x[k]  // <-- set tau_ca
-      for i = 0, nM-1 {
-        soma.m2_modulation_motoneuron_m2 = m2vals.x[i] // <-- set m2 modulation
-        run_simulation()
+      soma.tau_ca_motoneuron_m2 = taucas.x[k]
+      for p = 0, nP-1 {
+        soma.pic_ton_motoneuron_m2 = pictons.x[p]    // <-- set PIC onset
+        for i = 0, nM-1 {
+          soma.m2_modulation_motoneuron_m2 = m2vals.x[i]
+          run_simulation()
+        }
       }
     }
   }
-  printf("Done. Files in out_m2qa/ (names include diameter & tau_ca).\n")
+  printf("Done. Files in out_m2qa/ (names include diameter, tau_ca, and pic_ton).\n")
 }
-
 
 // ---------- entry point ----------
 run_all()

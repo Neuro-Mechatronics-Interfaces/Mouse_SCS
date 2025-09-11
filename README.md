@@ -104,6 +104,7 @@ To launch the passive leak conductance frequency parameter sweep simulations, ru
 ```bat
 call NEURON\nrniv.bat C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron/main_leak_freq_sweep.hoc out_leak C:/nrn/bin
 ```
+Alternatively, launch `nrn_export_leak_deck` script from MATLAB and/or follow instructions in comments. 
 This assumes you have installed NEURON at `C:/nrn` (the default). 
 
 ### NEURON M2 Sweep ###
@@ -111,8 +112,28 @@ To launch the M2-receptor frequency parameter sweep simulations, run:
 ```bat
 call NEURON\nrniv.bat C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron/main_m2_freq_sweep.hoc out_m2 C:/nrn/bin
 ```
+Alternatively, launch `nrn_export_m2_deck` script from MATLAB and/or follow instructions in comments.  
 This assumes you have installed NEURON at `C:/nrn` (the default). 
 Note that the `MOTONEURON_M2.mod` file has been modified from the original `MOTONEURON.mod` -- specifically, in addition to the `m2_modulation` parameter (default value of 1 has no influence on base MOTONEURON), which is included by modifying the calculation of `ikrect`. A few parameter update equations effecting Calcium dynamics are also modified:
 * `tau_h` : Default is unmodified, change via `tau_n_gain`
 * `tau_m` : Default is unmodified, change via `tau_n_gain`
 * `tau_n` : Default is unmodified, change via `tau_n_gain`
+There are additional new parameters influencing the Calcium dynamics:  
+* `tau_ca` : Default 25 ms value keeps same Ca2+ clearance as in Capogrosso & Formento model. Increasing the value slows Ca2+ clearance and effectively gates Max Firing rate.  
+* `picton` : Default 10000 ms value disables `PIC`-like step change in `gcaL` when simulation reaches time `picton` by setting the value outside of typical simulation duration length. 
+  + `kdrop` : Default value is 0; set between 0 and 1 to couple PIC influence on outward Potassium current changes, causing broader PIC plateau.  
+  + `gcaL_pic` : Default value is 0.001 (mho/cm2), which is 10x `gcaL` by default. So when the "PIC" is on, it makes `gcaL` 10x more conductive.  
+  + `pic_tau` : Makes the gating "smoother" by providing a time-constant for gate transition. Default value is 5, changes `pic_gate` according to: `pic_gate = 1 / (1 + Exp(-(t - pic_ton)/pic_tau))`
+
+### NEURON F-I Sweep ###
+To launch the F-I sweep and associated voltage clamp/time-voltage-concentration recordings, run:
+```bat
+cd NEURON/MotorNeuron
+call C:/nrn/bin/nrniv.exe -nobanner -nogui main_m2_amplitude_sweep.hoc
+```
+To enable the plotter while simulating (which slows it down):  
+```bat
+cd NEURON/MotorNeuron
+call C:/nrn/bin/nrniv.exe -c "show_trace_plot=1" -c "show_fi_plot=1" main_m2_amplitude_sweep.hoc
+```
+Alternatively, launch `nrn_plot_fi_curves` script from MATLAB and/or follow instructions in comments.  

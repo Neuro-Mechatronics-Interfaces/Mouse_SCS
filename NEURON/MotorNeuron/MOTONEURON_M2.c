@@ -73,76 +73,86 @@ extern double hoc_Exp(double);
 #define tau_n_gain_columnindex 12
 #define tau_ca _p[13]
 #define tau_ca_columnindex 13
-#define ina _p[14]
-#define ina_columnindex 14
-#define il _p[15]
-#define il_columnindex 15
-#define ikrect _p[16]
-#define ikrect_columnindex 16
-#define icaN _p[17]
-#define icaN_columnindex 17
-#define icaL _p[18]
-#define icaL_columnindex 18
-#define ikca _p[19]
-#define ikca_columnindex 19
-#define m_inf _p[20]
-#define m_inf_columnindex 20
-#define mc_inf _p[21]
-#define mc_inf_columnindex 21
-#define h_inf _p[22]
-#define h_inf_columnindex 22
-#define hc_inf _p[23]
-#define hc_inf_columnindex 23
-#define n_inf _p[24]
-#define n_inf_columnindex 24
-#define p_inf _p[25]
-#define p_inf_columnindex 25
-#define tau_m _p[26]
-#define tau_m_columnindex 26
-#define tau_h _p[27]
-#define tau_h_columnindex 27
-#define tau_p _p[28]
-#define tau_p_columnindex 28
-#define tau_n _p[29]
-#define tau_n_columnindex 29
-#define tau_mc _p[30]
-#define tau_mc_columnindex 30
-#define tau_hc _p[31]
-#define tau_hc_columnindex 31
-#define p _p[32]
-#define p_columnindex 32
-#define m _p[33]
-#define m_columnindex 33
-#define h _p[34]
-#define h_columnindex 34
-#define n _p[35]
-#define n_columnindex 35
-#define cai _p[36]
-#define cai_columnindex 36
-#define mc _p[37]
-#define mc_columnindex 37
-#define hc _p[38]
-#define hc_columnindex 38
-#define Dp _p[39]
-#define Dp_columnindex 39
-#define Dm _p[40]
-#define Dm_columnindex 40
-#define Dh _p[41]
-#define Dh_columnindex 41
-#define Dn _p[42]
-#define Dn_columnindex 42
-#define Dcai _p[43]
-#define Dcai_columnindex 43
-#define Dmc _p[44]
-#define Dmc_columnindex 44
-#define Dhc _p[45]
-#define Dhc_columnindex 45
-#define Eca _p[46]
-#define Eca_columnindex 46
-#define v _p[47]
-#define v_columnindex 47
-#define _g _p[48]
-#define _g_columnindex 48
+#define gcaL_pic _p[14]
+#define gcaL_pic_columnindex 14
+#define pic_ton _p[15]
+#define pic_ton_columnindex 15
+#define pic_tau _p[16]
+#define pic_tau_columnindex 16
+#define kdrop _p[17]
+#define kdrop_columnindex 17
+#define ina _p[18]
+#define ina_columnindex 18
+#define il _p[19]
+#define il_columnindex 19
+#define ikrect _p[20]
+#define ikrect_columnindex 20
+#define icaN _p[21]
+#define icaN_columnindex 21
+#define icaL _p[22]
+#define icaL_columnindex 22
+#define ikca _p[23]
+#define ikca_columnindex 23
+#define m_inf _p[24]
+#define m_inf_columnindex 24
+#define mc_inf _p[25]
+#define mc_inf_columnindex 25
+#define h_inf _p[26]
+#define h_inf_columnindex 26
+#define hc_inf _p[27]
+#define hc_inf_columnindex 27
+#define n_inf _p[28]
+#define n_inf_columnindex 28
+#define p_inf _p[29]
+#define p_inf_columnindex 29
+#define tau_m _p[30]
+#define tau_m_columnindex 30
+#define tau_h _p[31]
+#define tau_h_columnindex 31
+#define tau_p _p[32]
+#define tau_p_columnindex 32
+#define tau_n _p[33]
+#define tau_n_columnindex 33
+#define tau_mc _p[34]
+#define tau_mc_columnindex 34
+#define tau_hc _p[35]
+#define tau_hc_columnindex 35
+#define pic_gate _p[36]
+#define pic_gate_columnindex 36
+#define p _p[37]
+#define p_columnindex 37
+#define m _p[38]
+#define m_columnindex 38
+#define h _p[39]
+#define h_columnindex 39
+#define n _p[40]
+#define n_columnindex 40
+#define cai _p[41]
+#define cai_columnindex 41
+#define mc _p[42]
+#define mc_columnindex 42
+#define hc _p[43]
+#define hc_columnindex 43
+#define Dp _p[44]
+#define Dp_columnindex 44
+#define Dm _p[45]
+#define Dm_columnindex 45
+#define Dh _p[46]
+#define Dh_columnindex 46
+#define Dn _p[47]
+#define Dn_columnindex 47
+#define Dcai _p[48]
+#define Dcai_columnindex 48
+#define Dmc _p[49]
+#define Dmc_columnindex 49
+#define Dhc _p[50]
+#define Dhc_columnindex 50
+#define Eca _p[51]
+#define Eca_columnindex 51
+#define v _p[52]
+#define v_columnindex 52
+#define _g _p[53]
+#define _g_columnindex 53
  
 #if MAC
 #if !defined(v)
@@ -229,6 +239,7 @@ extern void hoc_reg_nmodl_filename(int, const char*);
  double ca0 = 2;
  /* some parameters have upper and lower limits */
  static HocParmLimits _hoc_parm_limits[] = {
+ "kdrop_motoneuron_m2", 0, 1,
  "m2_modulation_motoneuron_m2", 0, 1,
  "tau_n_gain_motoneuron_m2", 0, 2,
  "tau_h_gain_motoneuron_m2", 0, 2,
@@ -253,6 +264,10 @@ extern void hoc_reg_nmodl_filename(int, const char*);
  "tau_h_gain_motoneuron_m2", "1",
  "tau_n_gain_motoneuron_m2", "1",
  "tau_ca_motoneuron_m2", "ms",
+ "gcaL_pic_motoneuron_m2", "mho/cm2",
+ "pic_ton_motoneuron_m2", "ms",
+ "pic_tau_motoneuron_m2", "ms",
+ "kdrop_motoneuron_m2", "1",
  "cai_motoneuron_m2", "mM",
  "ina_motoneuron_m2", "mA/cm2",
  "il_motoneuron_m2", "mA/cm2",
@@ -260,6 +275,7 @@ extern void hoc_reg_nmodl_filename(int, const char*);
  "icaN_motoneuron_m2", "mA/cm2",
  "icaL_motoneuron_m2", "mA/cm2",
  "ikca_motoneuron_m2", "mA/cm2",
+ "pic_gate_motoneuron_m2", "1",
  0,0
 };
  static double cai0 = 0;
@@ -319,6 +335,10 @@ static void _ode_matsol(NrnThread*, _Memb_list*, int);
  "tau_h_gain_motoneuron_m2",
  "tau_n_gain_motoneuron_m2",
  "tau_ca_motoneuron_m2",
+ "gcaL_pic_motoneuron_m2",
+ "pic_ton_motoneuron_m2",
+ "pic_tau_motoneuron_m2",
+ "kdrop_motoneuron_m2",
  0,
  "ina_motoneuron_m2",
  "il_motoneuron_m2",
@@ -338,6 +358,7 @@ static void _ode_matsol(NrnThread*, _Memb_list*, int);
  "tau_n_motoneuron_m2",
  "tau_mc_motoneuron_m2",
  "tau_hc_motoneuron_m2",
+ "pic_gate_motoneuron_m2",
  0,
  "p_motoneuron_m2",
  "m_motoneuron_m2",
@@ -354,7 +375,7 @@ extern Prop* need_memb(Symbol*);
 static void nrn_alloc(Prop* _prop) {
 	Prop *prop_ion;
 	double *_p; Datum *_ppvar;
- 	_p = nrn_prop_data_alloc(_mechtype, 49, _prop);
+ 	_p = nrn_prop_data_alloc(_mechtype, 54, _prop);
  	/*initialize range parameters*/
  	gnabar = 0.05;
  	gl = 0.002;
@@ -370,8 +391,12 @@ static void nrn_alloc(Prop* _prop) {
  	tau_h_gain = 1;
  	tau_n_gain = 1;
  	tau_ca = 20;
+ 	gcaL_pic = 0.001;
+ 	pic_ton = 10000;
+ 	pic_tau = 5;
+ 	kdrop = 0;
  	_prop->param = _p;
- 	_prop->param_size = 49;
+ 	_prop->param_size = 54;
  	_ppvar = nrn_prop_datum_alloc(_mechtype, 1, _prop);
  	_prop->dparam = _ppvar;
  	/*connect ionic variables to this model*/
@@ -399,7 +424,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
   hoc_reg_nmodl_text(_mechtype, nmodl_file_text);
   hoc_reg_nmodl_filename(_mechtype, nmodl_filename);
 #endif
-  hoc_register_prop_size(_mechtype, 49, 1);
+  hoc_register_prop_size(_mechtype, 54, 1);
   hoc_register_dparam_semantics(_mechtype, 0, "cvodeieq");
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
@@ -646,8 +671,9 @@ for (_iml = 0; _iml < _cntml; ++_iml) {
 }
 
 static double _nrn_current(double* _p, Datum* _ppvar, Datum* _thread, NrnThread* _nt, double _v){double _current=0.;v=_v;{ {
+   pic_gate = 1.0 / ( 1.0 + Exp ( _threadargscomma_ - ( t - pic_ton ) / pic_tau ) ) ;
    ina = gnabar * m * m * m * h * ( v - ena ) ;
-   ikrect = gkrect * ( 1.0 / ( Exp ( _threadargscomma_ m2_modulation ) ) ) * n * n * n * n * ( v - ek ) ;
+   ikrect = gkrect * ( 1.0 - kdrop * pic_gate ) * ( 1.0 / ( Exp ( _threadargscomma_ m2_modulation ) ) ) * n * n * n * n * ( v - ek ) ;
    il = gl * ( v - el ) ;
    if ( cai <= 1e-6 ) {
      Eca = ( ( 1000.0 * R * 309.15 ) / ( 2.0 * F ) ) * log ( ca0 / cai_min ) ;
@@ -656,7 +682,7 @@ static double _nrn_current(double* _p, Datum* _ppvar, Datum* _thread, NrnThread*
      Eca = ( ( 1000.0 * R * 309.15 ) / ( 2.0 * F ) ) * log ( ca0 / cai ) ;
      }
    icaN = gcaN * mc * mc * hc * ( v - Eca ) ;
-   icaL = gcaL * p * ( v - Eca ) ;
+   icaL = ( gcaL + ( gcaL_pic - gcaL ) * pic_gate ) * p * ( v - Eca ) ;
    ikca = gcak * ( cai * cai ) / ( cai * cai + 0.014 * 0.014 ) * ( v - ek ) ;
    }
  _current += ina;
@@ -808,6 +834,8 @@ static const char* nmodl_file_text =
   "    RANGE p_inf, m_inf, h_inf, n_inf, mc_inf, hc_inf\n"
   "    RANGE tau_p, tau_m, tau_h, tau_n, tau_mc, tau_hc, tau_ca\n"
   "    RANGE m2_modulation, tau_m_gain, tau_h_gain, tau_n_gain\n"
+  "    RANGE gcaL, gcaL_pic, pic_ton, pic_tau, kdrop\n"
+  "    RANGE pic_gate\n"
   "}\n"
   "\n"
   "UNITS {\n"
@@ -843,6 +871,10 @@ static const char* nmodl_file_text =
   "    tau_h_gain = 1 (1) <0,2> : <0,2> dimensionless\n"
   "    tau_n_gain = 1 (1) <0,2> : <0,2> dimensionless\n"
   "    tau_ca = 20 (ms) <10, 200> : calcium removal time constant\n"
+  "    gcaL_pic = 0.001  (mho/cm2)   : stronger L-type once PIC is \"on\"\n"
+  "    pic_ton  = 10000  (ms)        : time (ms) when PIC starts turning on; default never turns it on.\n"
+  "    pic_tau  = 5      (ms)        : smoothness of the switch\n"
+  "    kdrop    = 0      (1) <0,1>   : optional fractional drop of Kdr after PIC onset\n"
   "}\n"
   "\n"
   "STATE {\n"
@@ -875,12 +907,16 @@ static const char* nmodl_file_text =
   "    tau_n\n"
   "    tau_mc\n"
   "    tau_hc\n"
+  "    pic_gate (1)\n"
   "}\n"
   "\n"
   "BREAKPOINT {\n"
   "    SOLVE states METHOD cnexp\n"
+  "    pic_gate = 1 / (1 + Exp(-(t - pic_ton)/pic_tau))\n"
   "    ina = gnabar * m*m*m*h*(v - ena)\n"
-  "    ikrect = gkrect * (1 / (Exp(m2_modulation))) *n*n*n*n* (v - ek)  : m2_modulation in [0..1]\n"
+  "    : ikrect = gkrect * (1 / (Exp(m2_modulation))) *n*n*n*n* (v - ek)  : m2_modulation in [0..1]\n"
+  "    ikrect = gkrect * (1 - kdrop*pic_gate) * (1 / (Exp(m2_modulation))) * n*n*n*n* (v - ek) : m2_modulation + kdrop/gate\n"
+  "\n"
   "    il = gl * (v - el)\n"
   "    : Guard Eca against tiny cai to avoid log(ca0/0) -> inf\n"
   "    if (cai <= 1e-6) {\n"
@@ -889,7 +925,8 @@ static const char* nmodl_file_text =
   "        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai)\n"
   "    }\n"
   "    icaN = gcaN * mc*mc * hc * (v - Eca)\n"
-  "    icaL = gcaL * p * (v - Eca)\n"
+  "    : icaL = gcaL * p * (v - Eca) : original\n"
+  "    icaL = (gcaL + (gcaL_pic - gcaL)*pic_gate) * p * (v - Eca)\n"
   "    ikca = gcak * (cai*cai) / (cai*cai + 0.014*0.014) * (v - ek)\n"
   "}\n"
   "\n"

@@ -21,7 +21,7 @@ if isempty(files)
 end
 
 % Regex (case-insensitive) for new names; tauca optional
-rx = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
+rx = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)_picton_(?<picton>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
 T = table();
 for k = 1:numel(files)
     fname = files(k).name;
@@ -29,12 +29,10 @@ for k = 1:numel(files)
 
     % Parse tokens
     tok = regexp(fname, rx, 'names');
-    TauCa_ms = NaN;
     Diam_um  = str2double(tok.diam);
     M2       = str2double(tok.m2);
-    if isfield(tok,'tauca') && ~isempty(tok.tauca)
-        TauCa_ms = str2double(tok.tauca);
-    end
+    PIC_t_ON_ms = str2double(tok.picton);
+    TauCa_ms = str2double(tok.tauca);
 
     % Read table (writer uses exact headers I_nA, Rate_Hz)
     t = readtable(fpath, 'FileType','text', 'Delimiter','\t');
@@ -56,6 +54,7 @@ for k = 1:numel(files)
     ti.M2        = repmat(M2, height(ti), 1);
     ti.Diam_um   = repmat(Diam_um, height(ti), 1);
     ti.TauCa_ms  = repmat(TauCa_ms, height(ti), 1);
+    ti.PIC_t_ON_ms = repmat(PIC_t_ON_ms, height(ti), 1);
     ti.File      = repmat(string(fname), height(ti), 1);
 
     T = [T; ti]; %#ok<AGROW>
@@ -79,13 +78,15 @@ title(tl, 'f–I curves by Diameter × \tau_{Ca}', 'FontName','Arial');
 
 % Consistent colors for M2 across tiles
 m2_all = unique(T.M2);
-cols = cm.umap(validatecolor("#EF3A47"),numel(m2_all)+2);
+pic_all = unique(T.PIC_t_ON_ms);
+cols = cm.umap(validatecolor("#EF3A47"),numel(m2_all)*numel(pic_all)+2);
 cols = cols(2:(end-1),:);
 tileTitles = strings(nP,1);                % store for reuse in traces figure
 i_nA_best = nan(nP,1);
 m2_best = nan(nP,1);
 tauca_best = nan(nP,1);
 diam_best = nan(nP,1);
+pic_t_on_best = nan(nP,1);
 axs = gobjects(nP,1);
 for p = 1:nP
     d = pairs(p,1);  tau = pairs(p,2);
@@ -99,11 +100,13 @@ for p = 1:nP
 
     for i = 1:numel(m2_all)
         m2val = m2_all(i);
-        Ti = Tp(Tp.M2==m2val, :);
+        picval = pic_all(i);
+        Ti = Tp(Tp.M2==m2val & Tp.PIC_t_ON_ms==picval, :);
         if isempty(Ti), continue; end
         Ti = sortrows(Ti, 'I_nA');
+        pic_lab = tern(picval < 1000,sprintf("PIC_{ON} = %d ms",picval),"PIC_{OFF}");
         plot(ax, Ti.I_nA, Ti.Rate_Hz, '-', ...
-            'DisplayName', sprintf('M2 = %.2f', m2val), ...
+            'DisplayName', sprintf('M2 = %.2f | %s', m2val, pic_lab), ...
             'LineWidth', 1.5, ... 'MarkerSize', 5, ...
             'Color', cols(i,:));
     end
@@ -123,11 +126,15 @@ for p = 1:nP
     title(ax, ttl, 'FontName','Arial');
     legend(ax,'Location','southeast','FontName','Arial','Box','off');
 
-    tileTitles(p) = string(ttl);
+    
     % pick the single point with maximum rate in this panel
     [~, localIdx] = max(Tp.Rate_Hz);
-    i_nA_best(p) = Tp.I_nA(localIdx);
+    pic_t_on_best(p) = Tp.PIC_t_ON_ms(localIdx);
+    pic_lab = tern(pic_t_on_best(p) < 1000,sprintf("PIC_{ON} = %d ms",pic_t_on_best(p)),"PIC_{OFF}");
     m2_best(p) = Tp.M2(localIdx);
+    m2_lab = sprintf("M2 = %.2f", m2_best(p));
+    tileTitles(p) = sprintf("%s [%s | %s]", string(ttl), m2_lab, pic_lab);
+    i_nA_best(p) = Tp.I_nA(localIdx);
     diam_best(p) = Tp.Diam_um(localIdx);
     tauca_best(p) = Tp.TauCa_ms(localIdx);
     panelMaxRows(p) = find(maskD & maskT, 1, 'first');
@@ -145,7 +152,6 @@ title(tl2, 'Time traces at panel''s max-rate point (V: black, [Ca^{2+}]: blue)',
 
 for p = 1:nP
     if ismissing(panelMaxRows(p)), nexttile(tl2); axis off; continue; end
-    r = T(panelMaxRows(p), :);
     ax2 = nexttile(tl2); set(ax2,'FontName','Arial'); grid(ax2,'on'); hold(ax2,'on');
 
     % Build a robust search pattern for the trace file
@@ -153,7 +159,9 @@ for p = 1:nP
     m2_s   = num2str_ifint(m2_best(p));
     I_s    = num2str_ifint(i_nA_best(p));
     tau_s = num2str_ifint(tauca_best(p));
-    pat_with_tau = sprintf('trace_diam_%s_m2_%s_tauca_%s_I_%s.tsv', diam_s, m2_s, tau_s, I_s);
+    pic_t_on_s = num2str_ifint(pic_t_on_best(p));
+
+    pat_with_tau = sprintf('trace_diam_%s_m2_%s_tauca_%s_picton_%d_I_%s.tsv', diam_s, m2_s, tau_s, pic_t_on_s, I_s);
     pat_glob     = pat_with_tau; % exact first
     tr_files = dir(fullfile(outdir, pat_glob));
 
@@ -221,4 +229,12 @@ for k = 1:numel(c)
     j = find(vn == c(k), 1);
     if ~isempty(j), idx = j; return; end
 end
+end
+
+function c = tern(cond,a,b)
+    if (cond)
+        c = a;
+    else
+        c = b;
+    end
 end

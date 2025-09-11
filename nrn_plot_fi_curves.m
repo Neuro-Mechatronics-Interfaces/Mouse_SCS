@@ -8,6 +8,9 @@
 %   call C:/nrn/bin/nrniv.exe -nobanner -nogui main_m2_amplitude_sweep.hoc
 % ```
 %
+% Alternatively, you can try using the `system()` command by uncommenting
+% the top lines below.
+%
 % Note that you can also set the `show_traces_plot` and other flags to `1`
 % inside the `.hoc` file if you want to see the traces as the simulation
 % runs, but this makes it take longer and I couldn't figure out exactly how
@@ -16,6 +19,14 @@
 clear;
 close all force;
 clc;
+
+% Uncomment to run simulation from MATLAB directly.
+% terminal_cmd = sprintf( ...
+%     ['cd %s/NEURON/MotorNeuron && ' ...
+%      'call C:\\nrn\\bin\\mknrndll && ' ...
+%      'call C:\\nrn\\bin\\nrniv.exe main_m2_amplitude_sweep.hoc'], ...
+%      strrep(pwd,'\','/'));
+% system(sprintf('C:\\Windows\\System32\\cmd.exe /k "%s"', terminal_cmd));
 
 simresults_folder = fullfile(pwd,"NEURON", "MotorNeuron","out_m2qa");
 export_folder = "G:\Shared drives\NML_MetaWB_sandbox\Results\Simulations\PBR";
