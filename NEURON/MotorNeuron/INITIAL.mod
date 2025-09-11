@@ -35,12 +35,10 @@ PARAMETER {
 	gnabar	= 0.5	(mho/cm2)
 	gl	= 0.01 (mho/cm2)
 	gkrect = 0.1  (mho/cm2)
-	gnap =0.01 (mho/gm2)
+	gnap =0.01 (mho/cm2)
 	ena     = 50.0  (mV)
 	ek      = -80.0 (mV)
 	el	= -70.0 (mV)
-	dt              (ms)
-	v               (mV)
 	amA = 0.4
 	amB = 60
 	amC = 5

@@ -43,8 +43,6 @@ PARAMETER {
 	ena     = 50.0  (mV)
 	ek      = -80.0 (mV)
 	el	= -70.0 (mV)
-	dt              (ms)
-	v               (mV)
 	amA = 0.4
 	amB = 66
 	amC = 5
@@ -86,7 +84,12 @@ BREAKPOINT {
 	ina = gnabar * m*m*m*h*(v - ena)
 	ikrect   = gkrect *n*n*n*n*(v - ek)   :stesso ek di sotto
 	il   = gl * (v - el)
-	Eca = ((1000*R*309.15)/(2*F))*log(ca0/cai)
+	: Guard Eca against tiny cai to avoid log(ca0/0) -> inf
+    if (cai <= 1e-6) {
+        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/1e-6)
+    } else {
+        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai)
+    }
 	icaN = gcaN*mc*mc*hc*(v-Eca)
 	icaL = gcaL*p*(v-Eca)
 	ikca = gcak*(cai*cai)/(cai*cai+0.014*0.014)*(v-ek)
@@ -118,8 +121,6 @@ INITIAL {
 }
 
 PROCEDURE evaluate_fct(v(mV)) { LOCAL a,b,v2
-	  
-	 
 	:FAST SODIUM
 	:m
 	a = alpham(v)
@@ -130,13 +131,12 @@ PROCEDURE evaluate_fct(v(mV)) { LOCAL a,b,v2
 	tau_h = 30 / (Exp((v+60)/15) + Exp(-(v+60)/16))
 	h_inf = 1 / (1 + Exp((v+65)/7))
 
-	
 	:DELAYED RECTIFIER POTASSIUM 
 	tau_n = 5 / (Exp((v+50)/40) + Exp(-(v+50)/50))
 	n_inf = 1 / (1 + Exp(-(v+38)/15))
 
 	:CALCIUM DYNAMICS
-        :N-type
+    :N-type
 	tau_mc = 15
 	mc_inf = 1/(1+Exp(-(v+32)/5))
 	tau_hc = 50
@@ -145,7 +145,6 @@ PROCEDURE evaluate_fct(v(mV)) { LOCAL a,b,v2
 	:L-type
 	tau_p=400
 	p_inf=1/(1+Exp(-(v+55.8)/3.7))
-
 }
 
 
@@ -157,8 +156,6 @@ FUNCTION alpham(x) {
 	}
 }
 
-
-
 FUNCTION betam(x) {
 	if (fabs((x+bmB)/bmC) < 1e-6) {
 		betam = -bmA*bmC
@@ -168,11 +165,14 @@ FUNCTION betam(x) {
 }
 
 FUNCTION Exp(x) {
-	if (x < -100) {
-		Exp = 0
-	}else{
-		Exp = exp(x)
-	}
+    if (x < -100) {
+        Exp = 0
+    } else if (x > 100) {
+        Exp = exp(100)   : large but finite; prevents overflow
+    } else {
+        Exp = exp(x)
+    }
 }
+
 
 UNITSON

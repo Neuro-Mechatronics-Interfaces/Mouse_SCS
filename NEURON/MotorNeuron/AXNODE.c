@@ -374,7 +374,7 @@ extern void _nrn_thread_table_reg(int, void(*)(double*, Datum*, Datum*, NrnThrea
 extern void hoc_register_tolerance(int, HocStateTolerance*, Symbol***);
 extern void _cvode_abstol( Symbol**, double*, int);
 
- void _AXNODE_reg() {
+ void _axnode_reg() {
 	int _vectorized = 1;
   _initlists();
  	register_mech(_mechanism, nrn_alloc,nrn_cur, nrn_jacob, nrn_state, nrn_init, hoc_nrnpointerindex, 1);
@@ -389,7 +389,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 axnode AXNODE.mod\n");
+ 	ivoc_help("help ?1 axnode axnode.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
@@ -825,7 +825,7 @@ _first = 0;
 #endif
 
 #if NMODL_TEXT
-static const char* nmodl_filename = "AXNODE.mod";
+static const char* nmodl_filename = "axnode.mod";
 static const char* nmodl_file_text = 
   "TITLE Motor Axon Node channels\n"
   "\n"
@@ -862,7 +862,6 @@ static const char* nmodl_file_text =
   "}\n"
   "\n"
   "PARAMETER {\n"
-  "\n"
   "	gnapbar = 0.01	(mho/cm2)\n"
   "	gnabar	= 3.0	(mho/cm2)\n"
   "	gkbar   = 0.08 	(mho/cm2)\n"
@@ -871,8 +870,6 @@ static const char* nmodl_file_text =
   "	ek      = -90.0 (mV)\n"
   "	el	= -90.0 (mV)\n"
   "	celsius		(degC)\n"
-  "	dt              (ms)\n"
-  "	v               (mV)\n"
   "	vtraub=-80\n"
   "	ampA = 0.01\n"
   "	ampB = 27\n"

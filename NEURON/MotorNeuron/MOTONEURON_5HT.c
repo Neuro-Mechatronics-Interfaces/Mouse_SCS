@@ -353,7 +353,7 @@ extern void _nrn_thread_table_reg(int, void(*)(double*, Datum*, Datum*, NrnThrea
 extern void hoc_register_tolerance(int, HocStateTolerance*, Symbol***);
 extern void _cvode_abstol( Symbol**, double*, int);
 
- void _MOTONEURON_5HT_reg() {
+ void _motoneuron_5ht_reg() {
 	int _vectorized = 1;
   _initlists();
  	register_mech(_mechanism, nrn_alloc,nrn_cur, nrn_jacob, nrn_state, nrn_init, hoc_nrnpointerindex, 1);
@@ -368,7 +368,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 motoneuron_5ht MOTONEURON_5HT.mod\n");
+ 	ivoc_help("help ?1 motoneuron_5ht motoneuron_5ht.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
@@ -733,7 +733,7 @@ _first = 0;
 #endif
 
 #if NMODL_TEXT
-static const char* nmodl_filename = "MOTONEURON_5HT.mod";
+static const char* nmodl_filename = "motoneuron_5ht.mod";
 static const char* nmodl_file_text = 
   ":SOMA\n"
   "\n"
@@ -780,8 +780,6 @@ static const char* nmodl_file_text =
   "	ena     = 50.0  (mV)\n"
   "	ek      = -80.0 (mV)\n"
   "	el	= -70.0 (mV)\n"
-  "	dt              (ms)\n"
-  "	v               (mV)\n"
   "	amA = 0.4\n"
   "	amB = 66\n"
   "	amC = 5\n"

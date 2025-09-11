@@ -353,7 +353,7 @@ extern void _nrn_thread_table_reg(int, void(*)(double*, Datum*, Datum*, NrnThrea
 extern void hoc_register_tolerance(int, HocStateTolerance*, Symbol***);
 extern void _cvode_abstol( Symbol**, double*, int);
 
- void _MOTONEURON_reg() {
+ void _motoneuron_reg() {
 	int _vectorized = 1;
   _initlists();
  	register_mech(_mechanism, nrn_alloc,nrn_cur, nrn_jacob, nrn_state, nrn_init, hoc_nrnpointerindex, 1);
@@ -368,7 +368,7 @@ extern void _cvode_abstol( Symbol**, double*, int);
  	hoc_register_cvode(_mechtype, _ode_count, _ode_map, _ode_spec, _ode_matsol);
  	hoc_register_tolerance(_mechtype, _hoc_state_tol, &_atollist);
  	hoc_register_var(hoc_scdoub, hoc_vdoub, hoc_intfunc);
- 	ivoc_help("help ?1 motoneuron MOTONEURON.mod\n");
+ 	ivoc_help("help ?1 motoneuron motoneuron.mod\n");
  hoc_register_limits(_mechtype, _hoc_parm_limits);
  hoc_register_units(_mechtype, _hoc_parm_units);
  }
@@ -502,6 +502,9 @@ double Exp ( _threadargsprotocomma_ double _lx ) {
  if ( _lx < - 100.0 ) {
      _lExp = 0.0 ;
      }
+   else if ( _lx > 100.0 ) {
+     _lExp = exp ( 100.0 ) ;
+     }
    else {
      _lExp = exp ( _lx ) ;
      }
@@ -610,7 +613,12 @@ static double _nrn_current(double* _p, Datum* _ppvar, Datum* _thread, NrnThread*
    ina = gnabar * m * m * m * h * ( v - ena ) ;
    ikrect = gkrect * n * n * n * n * ( v - ek ) ;
    il = gl * ( v - el ) ;
-   Eca = ( ( 1000.0 * R * 309.15 ) / ( 2.0 * F ) ) * log ( ca0 / cai ) ;
+   if ( cai <= 1e-6 ) {
+     Eca = ( ( 1000.0 * R * 309.15 ) / ( 2.0 * F ) ) * log ( ca0 / 1e-6 ) ;
+     }
+   else {
+     Eca = ( ( 1000.0 * R * 309.15 ) / ( 2.0 * F ) ) * log ( ca0 / cai ) ;
+     }
    icaN = gcaN * mc * mc * hc * ( v - Eca ) ;
    icaL = gcaL * p * ( v - Eca ) ;
    ikca = gcak * ( cai * cai ) / ( cai * cai + 0.014 * 0.014 ) * ( v - ek ) ;
@@ -733,7 +741,7 @@ _first = 0;
 #endif
 
 #if NMODL_TEXT
-static const char* nmodl_filename = "MOTONEURON.mod";
+static const char* nmodl_filename = "motoneuron.mod";
 static const char* nmodl_file_text = 
   ":SOMA\n"
   "\n"
@@ -780,8 +788,6 @@ static const char* nmodl_file_text =
   "	ena     = 50.0  (mV)\n"
   "	ek      = -80.0 (mV)\n"
   "	el	= -70.0 (mV)\n"
-  "	dt              (ms)\n"
-  "	v               (mV)\n"
   "	amA = 0.4\n"
   "	amB = 66\n"
   "	amC = 5\n"
@@ -823,7 +829,12 @@ static const char* nmodl_file_text =
   "	ina = gnabar * m*m*m*h*(v - ena)\n"
   "	ikrect   = gkrect *n*n*n*n*(v - ek)   :stesso ek di sotto\n"
   "	il   = gl * (v - el)\n"
-  "	Eca = ((1000*R*309.15)/(2*F))*log(ca0/cai)\n"
+  "	: Guard Eca against tiny cai to avoid log(ca0/0) -> inf\n"
+  "    if (cai <= 1e-6) {\n"
+  "        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/1e-6)\n"
+  "    } else {\n"
+  "        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai)\n"
+  "    }\n"
   "	icaN = gcaN*mc*mc*hc*(v-Eca)\n"
   "	icaL = gcaL*p*(v-Eca)\n"
   "	ikca = gcak*(cai*cai)/(cai*cai+0.014*0.014)*(v-ek)\n"
@@ -855,8 +866,6 @@ static const char* nmodl_file_text =
   "}\n"
   "\n"
   "PROCEDURE evaluate_fct(v(mV)) { LOCAL a,b,v2\n"
-  "	  \n"
-  "	 \n"
   "	:FAST SODIUM\n"
   "	:m\n"
   "	a = alpham(v)\n"
@@ -867,13 +876,12 @@ static const char* nmodl_file_text =
   "	tau_h = 30 / (Exp((v+60)/15) + Exp(-(v+60)/16))\n"
   "	h_inf = 1 / (1 + Exp((v+65)/7))\n"
   "\n"
-  "	\n"
   "	:DELAYED RECTIFIER POTASSIUM \n"
   "	tau_n = 5 / (Exp((v+50)/40) + Exp(-(v+50)/50))\n"
   "	n_inf = 1 / (1 + Exp(-(v+38)/15))\n"
   "\n"
   "	:CALCIUM DYNAMICS\n"
-  "        :N-type\n"
+  "    :N-type\n"
   "	tau_mc = 15\n"
   "	mc_inf = 1/(1+Exp(-(v+32)/5))\n"
   "	tau_hc = 50\n"
@@ -882,7 +890,6 @@ static const char* nmodl_file_text =
   "	:L-type\n"
   "	tau_p=400\n"
   "	p_inf=1/(1+Exp(-(v+55.8)/3.7))\n"
-  "\n"
   "}\n"
   "\n"
   "\n"
@@ -894,8 +901,6 @@ static const char* nmodl_file_text =
   "	}\n"
   "}\n"
   "\n"
-  "\n"
-  "\n"
   "FUNCTION betam(x) {\n"
   "	if (fabs((x+bmB)/bmC) < 1e-6) {\n"
   "		betam = -bmA*bmC\n"
@@ -905,12 +910,15 @@ static const char* nmodl_file_text =
   "}\n"
   "\n"
   "FUNCTION Exp(x) {\n"
-  "	if (x < -100) {\n"
-  "		Exp = 0\n"
-  "	}else{\n"
-  "		Exp = exp(x)\n"
-  "	}\n"
+  "    if (x < -100) {\n"
+  "        Exp = 0\n"
+  "    } else if (x > 100) {\n"
+  "        Exp = exp(100)   : large but finite; prevents overflow\n"
+  "    } else {\n"
+  "        Exp = exp(x)\n"
+  "    }\n"
   "}\n"
+  "\n"
   "\n"
   "UNITSON\n"
   ;

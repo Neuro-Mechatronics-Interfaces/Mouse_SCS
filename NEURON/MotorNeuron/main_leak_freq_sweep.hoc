@@ -13,14 +13,14 @@ create soma, dend[3], ais, axon
 soma {
   L = 30
   diam = 40
-  insert motoneuron_m2
+  insert motoneuron
 }
 
 ais {
   L = 30      // ~20–40 µm common
   diam = 1.2  // ~0.8–1.5 µm
   nseg = 3
-  insert initial           
+  insert initial        
 }
 
 axon {
@@ -35,13 +35,14 @@ for i=0,2 {
     L = 25
     diam = 1
     nseg = 5
-    insert motoneuron_m2
+    insert motoneuron
   }
 }
 
 // Wiring: soma -> AIS -> axon
 connect ais(0),  soma(1)
 connect axon(0), ais(1)
+
 // Connect dendrites to soma
 connect dend[0](1), soma(0)
 connect dend[1](1), soma(0)
@@ -50,8 +51,8 @@ connect dend[2](1), soma(0)
 // ----- Synapses & Stims -----
 objref syn0, syn1, syn2, stim0, stim1, stim2
 
-dend[0] { syn0 = new Exp2Syn(0.5)  syn0.e = -80 }  // IPSP
-dend[1] { syn1 = new Exp2Syn(0.5)  syn1.e = -80 }  // IPSP
+dend[0] { syn0 = new Exp2Syn(0.5)  syn0.e =  80 }  // EPSP
+dend[1] { syn1 = new Exp2Syn(0.5)  syn1.e =  80 }  // EPSP
 dend[2] { syn2 = new Exp2Syn(0.5)  syn2.e =  80 }  // EPSP
 
 stim0 = new NetStim()
@@ -92,10 +93,10 @@ dt = 0.025
 
 // Run once per condition
 proc run_simulation() {
-    soma.gl_motoneuron_m2 = leak_cur
-    dend[0].gl_motoneuron_m2 = leak_cur
-    dend[1].gl_motoneuron_m2 = leak_cur
-    dend[2].gl_motoneuron_m2 = leak_cur
+    soma.gl_motoneuron = leak_cur
+    dend[0].gl_motoneuron = leak_cur
+    dend[1].gl_motoneuron = leak_cur
+    dend[2].gl_motoneuron = leak_cur
 
     // Stims by phase
     stim0.interval = 9000 / freq
@@ -126,6 +127,7 @@ proc run_simulation() {
     // Clear previous traces before this run
     tvec.resize(0)
     vvec.resize(0)
+
     finitialize(-65)
     run()
 }
@@ -133,42 +135,30 @@ proc run_simulation() {
 // ----- Sweeps (unchanged except for mechanism names above) -----
 objref blend_levels, m2_levels, leak_levels, frequencies, w0_levels, w1_levels, w2_levels
 leak_levels = new Vector()
-leak_levels.append(0.001)
-leak_levels.append(0.003)
+leak_levels.append(0.0005)
 leak_levels.append(0.005)
 
 m2_levels = new Vector()
-m2_levels.append(0.1)
 m2_levels.append(1.0)
-m2_levels.append(10.0)
 
 blend_levels = new Vector()
 blend_levels.append(0.0)
-blend_levels.append(0.2)
 blend_levels.append(0.5)
 
 frequencies = new Vector()
-frequencies.append(10)
+frequencies.append(3)
 frequencies.append(30)
-frequencies.append(50)
-frequencies.append(100)
+frequencies.append(300)
+frequencies.append(3000)
 
 // Pulse sequencing weights
 w0_levels = new Vector()  
 w1_levels = new Vector()  
 w2_levels = new Vector()
 // Constant
-w0_levels.append(20)  
-w1_levels.append(20)  
-w2_levels.append(50)  
-// Increasing
-w0_levels.append(10)
-w1_levels.append(30)
-w2_levels.append(50)   
-// Decreasing
 w0_levels.append(30)  
-w1_levels.append(10)  
-w2_levels.append(50)  
+w1_levels.append(30)  
+w2_levels.append(30)  
 
 // ---- Synaptic polarity presets (sequence modes) ----
 // mode 0: EPSP only           (80,  80,  80)
@@ -239,13 +229,13 @@ p2_levels.append(1.0)   // equal
 objref frout, m2out, leakout, blendout, seqout, pout, wout
 
 proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
-  frout = new File()   frout.wopen("out_m2/frequencies.dat")   frequencies.printf(frout, "%g\n")   frout.close()
-  m2out = new File()   m2out.wopen("out_m2/m2_levels.dat")     m2_levels.printf(m2out, "%g\n")     m2out.close()
-  leakout = new File() leakout.wopen("out_m2/leak_levels.dat") leak_levels.printf(leakout, "%g\n") leakout.close()
-  blendout = new File() blendout.wopen("out_m2/blending_levels.dat") blend_levels.printf(blendout, "%g\n") blendout.close()
+  frout = new File()   frout.wopen("out_leak/frequencies.dat")   frequencies.printf(frout, "%g\n")   frout.close()
+  m2out = new File()   m2out.wopen("out_leak/m2_levels.dat")     m2_levels.printf(m2out, "%g\n")     m2out.close()
+  leakout = new File() leakout.wopen("out_leak/leak_levels.dat") leak_levels.printf(leakout, "%g\n") leakout.close()
+  blendout = new File() blendout.wopen("out_leak/blending_levels.dat") blend_levels.printf(blendout, "%g\n") blendout.close()
 
   // sequence modes table
-  seqout = new File()  seqout.wopen("out_m2/syn_sequence_modes.tsv")
+  seqout = new File()  seqout.wopen("out_leak/syn_sequence_modes.tsv")
   seqout.printf("mode\tname\tsyn0.e\tsyn1.e\tsyn2.e\n")
   for i=0, seq_modes.size()-1 {
     set_seq_mode(seq_modes.x[i])
@@ -254,7 +244,7 @@ proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
   seqout.close()
 
   // pulse intensity triplets
-  pout = new File()  pout.wopen("out_m2/pulse_intensities.tsv")
+  pout = new File()  pout.wopen("out_leak/pulse_intensities.tsv")
   pout.printf("row\tp0\tp1\tp2\n")
   pi_n0 = p0_levels.size()
   pi_n1 = p1_levels.size()
@@ -270,7 +260,7 @@ proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
   // ---- Write weights metadata ----
   // One row per "pattern" index c; aligns with w0_levels/w1_levels/w2_levels
   wout = new File()
-  wout.wopen("out_m2/weights.tsv")
+  wout.wopen("out_leak/weights.tsv")
   wout.printf("row\tW1\tW2\tW3\n")
   for c = 0, w2_levels.size()-1 {
     wout.printf("%d\t%g\t%g\t%g\n", c, w0_levels.x[c], w1_levels.x[c], w2_levels.x[c])
@@ -279,9 +269,8 @@ proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
 }
 
 func nconds() { local n
-  // mirror your loop bounds here:
   n = seq_modes.size() \
-    * p0_levels.size() /* assuming p0/p1/p2 equal length */ \
+    * p0_levels.size() \
     * w2_levels.size() \
     * leak_levels.size() \
     * m2_levels.size() \
@@ -328,15 +317,15 @@ proc run_all_conditions() { local runidx, total, total_runs
 
                 // Save traces — include seq and p-triplet tags
                 strdef filename_voltage, filename_time
-                sprint(filename_voltage, "out_m2/voltage_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", \
+                sprint(filename_voltage, "out_leak/voltage_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", \
                                       seqabbr, p0, p1, p2, w0, w1, w2, leak_cur, m2_cur, blending, freq)
-                sprint(filename_time,    "out_m2/time_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",    \
+                sprint(filename_time,    "out_leak/time_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",    \
                                       seqabbr, p0, p1, p2, w0, w1, w2, leak_cur, m2_cur, blending, freq)
 
                 vout = new File()  vout.wopen(filename_voltage)  vvec.printf(vout, "%g\n")  vout.close()
                 tout = new File()  tout.wopen(filename_time)     tvec.printf(tout, "%g\n")  tout.close()
                 hb = new File()
-                hb.wopen("out_m2/heartbeat.txt")
+                hb.wopen("out_leak/heartbeat.txt")
                 hb.printf("{\"k\":%d,\"total\":%d,\"elapsed\":%.3f,\"eta\":%.3f}\n", k, total, elapsed, eta)
                 hb.close()
               }
@@ -348,7 +337,7 @@ proc run_all_conditions() { local runidx, total, total_runs
   }
   printf("Done.\n")
   done = new File()
-  done.wopen("out_m2/done.marker")
+  done.wopen("out_leak/done.marker")
   done.printf("ok\n")
   done.close()
 }

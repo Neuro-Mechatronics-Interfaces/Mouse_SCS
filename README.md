@@ -1,6 +1,15 @@
 # MOUSE_SCS #  
 For mouse SCS procedures.  
 
+## Contents ##
+1. [Quick Start](#quick-start)
+  + [Runner Script Prep](#prepare-procedure-code-and-files)
+  + [Intan](#start-intan)
+  + [Stimulator](#start-am4100)
+  + [GUI](#start-matlab-gui)
+2. [Code Overview](#code-contents)
+3. [NEURON Simulations](#neuron-simulations)
+
 ## Quick Start ##
 Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_07"` on `2024-07-25`:  
 
@@ -36,7 +45,7 @@ Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_07"` 
 5. After each sweep, update the `SWEEP` constant at the top of `processing_2024_07_25.m` and then click `Run` from the `Editor` tab in the UI.  
   + This should generate a new Powerpoint for each sweep with the stimulus response curves, on the Google Drive mapped in `parameters.m`.   
 
-## Contents ##  
+## Code Contents ##  
 * [Configuration](#important)
 * [Experiments](#experiment-scripts)
 * [Main Experiment Functions](#main-experiment-functions)
@@ -87,3 +96,23 @@ Following steps assume you are running an experiment for `"Pilot_SCS_N_CEJ_07"` 
 ### Raspberry Pi Stim Channel Switcher ###  
 Code that was run on the Raspberry Pi v4b that managed stimulation switching is saved in the following [gist](https://gist.github.com/m053m716/467d81521e5ea66db066c23a15b5570e).
 
+## NEURON Simulations ##
+`NEURON` simulations are parameter grid searches encapsulated within `NEURON/MotorNeuron/main_<name>_sweep.hoc`. As of 2025-09-10 there are two `.hoc` files: `NEURON/MotorNeuron/main_leak_freq_sweep.hoc` and `NEURON/MotorNeuron/main_m2_freq_sweep.hoc`. They have to be run as shown below, before any of the related MATLAB loading/plotting utilities can be applied to generate PowerPoint decks summarizing the parameter grids.  
+
+### NEURON Leak Sweep ###
+To launch the passive leak conductance frequency parameter sweep simulations, run:  
+```bat
+call NEURON\nrniv.bat C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron/main_leak_freq_sweep.hoc out_leak C:/nrn/bin
+```
+This assumes you have installed NEURON at `C:/nrn` (the default). 
+
+### NEURON M2 Sweep ###
+To launch the M2-receptor frequency parameter sweep simulations, run: 
+```bat
+call NEURON\nrniv.bat C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron/main_m2_freq_sweep.hoc out_m2 C:/nrn/bin
+```
+This assumes you have installed NEURON at `C:/nrn` (the default). 
+Note that the `MOTONEURON_M2.mod` file has been modified from the original `MOTONEURON.mod` -- specifically, in addition to the `m2_modulation` parameter (default value of 1 has no influence on base MOTONEURON), which is included by modifying the calculation of `ikrect`. A few parameter update equations effecting Calcium dynamics are also modified:
+* `tau_h` : Default is unmodified, change via `tau_n_gain`
+* `tau_m` : Default is unmodified, change via `tau_n_gain`
+* `tau_n` : Default is unmodified, change via `tau_n_gain`

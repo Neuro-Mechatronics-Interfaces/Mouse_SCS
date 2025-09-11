@@ -1,49 +1,49 @@
-function simdata = load_simulated_data(W1, W2, W3, options)
-%LOAD_SIMULATED_DATA  Load data simulated using NEURON tool
+function simdata = load_simulated_data(options)
+%LOAD_SIMULATED_DATA  Discover W1/W2/W3 from weights.tsv and load all data.
 arguments
-    W1 (1,1) double
-    W2 (1,1) double
-    W3 (1,1) double
-    options.SimulationFolder = fullfile(pwd,"NEURON/MotorNeuron/out");
-    options.FrequenciesFile = "frequencies.dat";
-    options.M2LevelsFile = "m2_levels.dat";
-    options.LeakLevelsFile = "leak_levels.dat";
-    options.BlendingLevelsFile = "blending_levels.dat";
+    options.APThreshold (1,1) double = -10; % mV
+    options.SimulationOutputFolder = fullfile(pwd,"NEURON/MotorNeuron/out_leak")
+    options.FrequenciesFile = "frequencies.dat"
+    options.M2LevelsFile = "m2_levels.dat"
+    options.LeakLevelsFile = "leak_levels.dat"
+    options.BlendingLevelsFile = "blending_levels.dat"
+    options.SeqModesFile = "syn_sequence_modes.tsv"
+    options.PulseIntensitiesFile = "pulse_intensities.tsv"
+    options.IncludeSeqModes double = []
+    options.IncludeIntensityRows double = []
+    options.IncludeWeightRows double = [] 
+    options.WeightsFile = "weights.tsv";
+    options.MissingOK (1,1) logical = false
 end
-Frequency = load(fullfile(options.SimulationFolder, options.FrequenciesFile));
-nFreq = numel(Frequency);
-Frequency = reshape(Frequency,nFreq,1);
-M2_Level = load(fullfile(options.SimulationFolder, options.M2LevelsFile));
-nM2 = numel(M2_Level);
-M2_Level = reshape(M2_Level,nM2,1);
-M2_Level = repelem(M2_Level,nFreq,1);
-Frequency = repmat(Frequency,nM2,1);
-Leak = load(fullfile(options.SimulationFolder, options.LeakLevelsFile));
-nLeak = numel(Leak);
-Leak = reshape(Leak, nLeak, 1);
-Frequency = repmat(Frequency, nLeak, 1);
-M2_Level = repmat(M2_Level, nLeak, 1);
-Leak = repelem(Leak, nM2*nFreq, 1);
 
-Blending_Level = load(fullfile(options.SimulationFolder, options.BlendingLevelsFile));
-nBlend = numel(Blending_Level);
-Blending_Level = reshape(Blending_Level, nBlend, 1);
-Frequency = repmat(Frequency, nBlend, 1);
-M2_Level = repmat(M2_Level, nBlend, 1);
-Leak = repmat(Leak, nBlend, 1);
+outdir = options.SimulationOutputFolder;
 
-Blending_Level = repelem(Blending_Level, nM2*nFreq*nLeak, 1);
-
-nTotal = nM2 * nFreq * nLeak * nBlend;
-
-Time = cell(nTotal,1);
-Voltage = cell(nTotal,1);
-for iF = 1:nTotal
-    Time{iF} = load(fullfile(options.SimulationFolder,sprintf("time_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",W1,W2,W3,Leak(iF),M2_Level(iF),Blending_Level(iF),Frequency(iF))));
-    Voltage{iF} = load(fullfile(options.SimulationFolder,sprintf("voltage_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",W1,W2,W3,Leak(iF),M2_Level(iF),Blending_Level(iF),Frequency(iF))));
+% Read weights.tsv (row, W1, W2, W3)
+wT = readtable(fullfile(outdir,"weights.tsv"), ...
+    'FileType','text','Delimiter','\t','ReadVariableNames',true);
+wantRows = 1:height(wT);
+if ~isempty(options.IncludeWeightRows)
+    wantRows = intersect(wantRows, options.IncludeWeightRows);
 end
-W1 = ones(nTotal,1).*W1;
-W2 = ones(nTotal,1).*W2;
-W3 = ones(nTotal,1).*W3;
-simdata = table(M2_Level, Leak, W1, W2, W3, Blending_Level, Frequency, Time, Voltage);
+wT = wT(wantRows,:);
+
+% Accumulate simdata across weight rows
+simdata = table();
+for r = 1:height(wT)
+    W1 = wT.W1(r); W2 = wT.W2(r); W3 = wT.W3(r);
+    simr = load_simulated_data_one(W1, W2, W3, ...
+        'APThreshold',options.APThreshold, ...
+        'SimulationOutputFolder', options.SimulationOutputFolder, ...
+        'FrequenciesFile', options.FrequenciesFile, ...
+        'M2LevelsFile', options.M2LevelsFile, ...
+        'LeakLevelsFile', options.LeakLevelsFile, ...
+        'BlendingLevelsFile', options.BlendingLevelsFile, ...
+        'SeqModesFile', options.SeqModesFile, ...
+        'PulseIntensitiesFile', options.PulseIntensitiesFile, ...
+        'IncludeSeqModes', options.IncludeSeqModes, ...
+        'IncludeIntensityRows', options.IncludeIntensityRows, ...
+        'WeightsFile', options.WeightsFile, ...
+        'MissingOK', options.MissingOK);
+    simdata = [simdata; simr]; %#ok<AGROW>
+end
 end

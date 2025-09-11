@@ -25,13 +25,15 @@ NEURON {
     NONSPECIFIC_CURRENT icaL
     RANGE  gnabar, gl, ena, ek, el, gkrect, gcaN, gcaL, gcak
     RANGE p_inf, m_inf, h_inf, n_inf, mc_inf, hc_inf
-    RANGE tau_p, tau_m, tau_h, tau_n, tau_mc, tau_hc
-    RANGE m2_modulation
+    RANGE tau_p, tau_m, tau_h, tau_n, tau_mc, tau_hc, tau_ca
+    RANGE m2_modulation, tau_m_gain, tau_h_gain, tau_n_gain
 }
 
 UNITS {
     (mA) = (milliamp)
     (mV) = (millivolt)
+    (molar) = (1/liter)     
+    (mM) = (millimolar)    
 }
 
 PARAMETER {
@@ -39,29 +41,37 @@ PARAMETER {
     gnabar  = 0.05  (mho/cm2)
     gl      = 0.002 (mho/cm2)
 	gkrect = 0.3 (mho/cm2)
-    gcaN    = 0.001  (mho/cm2)
-    gcaL    = 0.0002 (mho/cm2)
-    : gcak    = 0.3   (mho/cm2) : original
-	gcak = 0.01 (mho/cm2)
-    ca0     = 2  
+    gcaN    = 0.05  (mho/cm2)
+    gcaL    = 0.0001 (mho/cm2)
+    gcak    = 0.3   (mho/cm2)
+    ca0     = 2     (mM)
     ena     = 50.0  (mV)
     ek      = -80.0 (mV)
     el      = -70.0 (mV)
-    dt              (ms)
-    v               (mV)
     amA = 0.4
-    amB = 59
+    amB = 66
     amC = 5
     bmA = 0.4
-    bmB = 31.5
+    bmB = 32
     bmC = 5
+    cai_min = 1e-6 (mM) : minimum cai to avoid log(0)
     R=8.314472 : Universal gas constant (J / mol*K)
     F=96485.34 : Faraday constant (C / mol)
-    m2_modulation = 1  : Default is no modulation (range: 0 to 1, where 1 is fully active M2 receptor)
+    m2_modulation = 1 (1)  <0,1>  : dimensionless, clipped in [0,1]
+    tau_m_gain = 1 (1) <0,2> : <0,2> dimensionless
+    tau_h_gain = 1 (1) <0,2> : <0,2> dimensionless
+    tau_n_gain = 1 (1) <0,2> : <0,2> dimensionless
+    tau_ca = 20 (ms) <10, 200> : calcium removal time constant
 }
 
 STATE {
-    p m h n cai mc hc
+    p 
+    m 
+    h 
+    n 
+    cai (mM) 
+    mc 
+    hc
 }
 
 ASSIGNED {
@@ -89,9 +99,14 @@ ASSIGNED {
 BREAKPOINT {
     SOLVE states METHOD cnexp
     ina = gnabar * m*m*m*h*(v - ena)
-    ikrect = gkrect * m2_modulation * n*n*n*n * (v - ek)  : Apply modulation to potassium current
+    ikrect = gkrect * (1 / (Exp(m2_modulation))) *n*n*n*n* (v - ek)  : m2_modulation in [0..1]
     il = gl * (v - el)
-    Eca = ((1000*R*309.15)/(2*F))*log(ca0/cai)
+    : Guard Eca against tiny cai to avoid log(ca0/0) -> inf
+    if (cai <= 1e-6) {
+        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai_min)
+    } else {
+        Eca = ((1000*R*309.15)/(2*F)) * log(ca0/cai)
+    }
     icaN = gcaN * mc*mc * hc * (v - Eca)
     icaL = gcaL * p * (v - Eca)
     ikca = gcak * (cai*cai) / (cai*cai + 0.014*0.014) * (v - ek)
@@ -106,7 +121,7 @@ DERIVATIVE states {
     n' = (n_inf - n) / tau_n
     mc' = (mc_inf - mc) / tau_mc
     hc' = (hc_inf - hc) / tau_hc
-    cai' = 0.01 * (-(icaN + icaL) - 4 * cai)
+    cai' = 0.01 * (-(icaN + icaL) - cai / (0.01 * tau_ca))
 }
 
 UNITSOFF
@@ -128,16 +143,16 @@ PROCEDURE evaluate_fct(v (mV)) { LOCAL a, b, v2
     a = alpham(v)
     b = betam(v)
     : tau_m = 1 / (a + b) : original
-	tau_m = (1 / (a + b)) / 4 : updated
+	tau_m = (1 / (a + b))*tau_m_gain : updated
     m_inf = a / (a + b)
     :h
     : tau_h = 30 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : original
-	tau_h = 8 / (Exp((v + 60) / 15) + Exp(-(v + 60) / 16)) : updated
+	tau_h = (30 / (Exp((v+60)/15) + Exp(-(v+60)/16))) * tau_h_gain : updated
     h_inf = 1 / (1 + Exp((v + 65) / 7))
 
     :DELAYED RECTIFIER POTASSIUM
     : tau_n = 5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)) : original
-	tau_n = (5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)))/2 : updated
+	tau_n = (5 / (Exp((v + 50) / 40) + Exp(-(v + 50) / 50)))*tau_n_gain : updated
     n_inf = 1 / (1 + Exp(-(v + 38) / 15))
 
     :CALCIUM DYNAMICS
@@ -171,9 +186,12 @@ FUNCTION betam(x) {
 FUNCTION Exp(x) {
     if (x < -100) {
         Exp = 0
+    } else if (x > 100) {
+        Exp = exp(100)   : large but finite; prevents overflow
     } else {
         Exp = exp(x)
     }
 }
+
 
 UNITSON

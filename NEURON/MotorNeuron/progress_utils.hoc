@@ -1,0 +1,31 @@
+// progress_utils.hoc
+
+// ---- PROGRESS / ETA ----
+t0 = 0
+elapsed = 0
+per_iter = 0
+eta = 0
+strdef bar, msg
+
+proc progress_init() { local n
+  n = $1 // total number of runs
+  startsw()
+  printf("Starting sweep with %d runs...\n", n)
+}
+
+proc progress_tick() { local k, total, cur_elapsed
+  k = $1        // 1-based index of current run
+  total = $2   // total number of runs
+  cur_elapsed = stopsw()
+  elapsed = elapsed + cur_elapsed
+  startsw()
+  if (k>1) {
+    per_iter = elapsed / k
+    eta = per_iter*(total - k)
+  } else {
+    per_iter = 0
+    eta = 0
+  }
+  printf("[%6.2f%%] %d/%d  elapsed=%.1fs  ETA=%.1fmins\n", \
+    100.0*k/total, k, total, elapsed, eta/60.0)
+}

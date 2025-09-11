@@ -33,7 +33,6 @@ UNITS {
 }
 
 PARAMETER {
-
 	gnapbar = 0.01	(mho/cm2)
 	gnabar	= 3.0	(mho/cm2)
 	gkbar   = 0.08 	(mho/cm2)
@@ -42,8 +41,6 @@ PARAMETER {
 	ek      = -90.0 (mV)
 	el	= -90.0 (mV)
 	celsius		(degC)
-	dt              (ms)
-	v               (mV)
 	vtraub=-80
 	ampA = 0.01
 	ampB = 27

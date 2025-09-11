@@ -55,10 +55,6 @@ PARAMETER {
     ena    = 50.0  (mV)
     ek     = -80.0 (mV)
     el     = -70.0 (mV)
-
-    dt              (ms)
-    v               (mV)
-
     : Na activation params (unchanged)
     amA = 0.4
     amB = 66

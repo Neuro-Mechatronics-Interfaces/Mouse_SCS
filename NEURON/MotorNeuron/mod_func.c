@@ -3,30 +3,30 @@
 #define IMPORT extern __declspec(dllimport)
 IMPORT int nrnmpi_myid, nrn_nobanner_;
 
-extern void _AXNODE_reg();
-extern void _INITIAL_reg();
-extern void _MOTONEURON_reg();
-extern void _MOTONEURON_5HT_reg();
-extern void _MOTONEURON_FF_reg();
-extern void _MOTONEURON_M2_reg();
+extern void _axnode_reg();
+extern void _initial_reg();
+extern void _motoneuron_reg();
+extern void _motoneuron_5ht_reg();
+extern void _motoneuron_ff_reg();
+extern void _motoneuron_m2_reg();
 
 void modl_reg(){
 	//nrn_mswindll_stdio(stdin, stdout, stderr);
     if (!nrn_nobanner_) if (nrnmpi_myid < 1) {
 	fprintf(stderr, "Additional mechanisms from files\n");
 
-fprintf(stderr," AXNODE.mod");
-fprintf(stderr," INITIAL.mod");
-fprintf(stderr," MOTONEURON.mod");
-fprintf(stderr," MOTONEURON_5HT.mod");
-fprintf(stderr," MOTONEURON_FF.mod");
-fprintf(stderr," MOTONEURON_M2.mod");
+fprintf(stderr," axnode.mod");
+fprintf(stderr," initial.mod");
+fprintf(stderr," motoneuron.mod");
+fprintf(stderr," motoneuron_5ht.mod");
+fprintf(stderr," motoneuron_ff.mod");
+fprintf(stderr," motoneuron_m2.mod");
 fprintf(stderr, "\n");
     }
-_AXNODE_reg();
-_INITIAL_reg();
-_MOTONEURON_reg();
-_MOTONEURON_5HT_reg();
-_MOTONEURON_FF_reg();
-_MOTONEURON_M2_reg();
+_axnode_reg();
+_initial_reg();
+_motoneuron_reg();
+_motoneuron_5ht_reg();
+_motoneuron_ff_reg();
+_motoneuron_m2_reg();
 }

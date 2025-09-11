@@ -1,0 +1,53 @@
+load_file("stdrun.hoc")
+
+// fresh test section
+create test
+access test
+proc setup_test() { test { L = 30  diam = 40  nseg = 1 } }
+setup_test()
+
+// print v at initialization and after first current evaluation
+proc showv() {
+  finitialize(-65)
+  printf("after finitialize: %g mV\n", test.v(0.5))
+  fcurrent()
+  printf("after fcurrent:    %g mV\n", test.v(0.5))
+}
+
+// clear any inserted mechanisms (literals are fine here)
+proc clearmechs() {
+  if (ismembrane("pas"))            uninsert pas
+  if (ismembrane("motoneuron"))     uninsert motoneuron
+  if (ismembrane("motoneuron_ff"))  uninsert motoneuron_ff
+  if (ismembrane("motoneuron_5ht")) uninsert motoneuron_5ht
+  if (ismembrane("motoneuron_m2"))  uninsert motoneuron_m2
+  if (ismembrane("initial"))        uninsert initial
+  if (ismembrane("axnode"))         uninsert axnode
+}
+
+// 1) Passive-only sanity
+clearmechs()
+insert pas
+e_pas = -65
+g_pas = 1e-4
+printf("== pas only ==\n")
+showv()
+
+// 2) Test each mechanism with a string-driven insert
+strdef cmd
+proc runtest() {  // usage: runtest("motoneuron")
+  clearmechs()
+  sprint(cmd, "insert %s", $s1)
+  execute1(cmd)
+  printf("== %s ==\n", $s1)
+  showv()
+}
+
+runtest("motoneuron")
+runtest("motoneuron_ff")
+runtest("motoneuron_5ht")
+runtest("motoneuron_m2")
+runtest("initial")
+runtest("axnode")
+
+quit()
