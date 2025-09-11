@@ -131,9 +131,9 @@ To launch the F-I sweep and associated voltage clamp/time-voltage-concentration 
 cd NEURON/MotorNeuron
 call C:/nrn/bin/nrniv.exe -nobanner -nogui main_m2_amplitude_sweep.hoc
 ```
-To enable the plotter while simulating (which slows it down):  
+To enable the plotter while simulating (which slows it down), and/or change `kdrop` mechanism (value between 0-1, larger increases PIC plateaus):  
 ```bat
 cd NEURON/MotorNeuron
-call C:/nrn/bin/nrniv.exe -c "show_trace_plot=1" -c "show_fi_plot=1" main_m2_amplitude_sweep.hoc
+call C:/nrn/bin/nrniv.exe -c "show_trace_plot=1" -c "show_fi_plot=1" -c "kdrop=0.5" main_m2_amplitude_sweep.hoc
 ```
 Alternatively, launch `nrn_plot_fi_curves` script from MATLAB and/or follow instructions in comments.  

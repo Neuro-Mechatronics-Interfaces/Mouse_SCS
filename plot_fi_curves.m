@@ -21,7 +21,7 @@ if isempty(files)
 end
 
 % Regex (case-insensitive) for new names; tauca optional
-rx = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)_picton_(?<picton>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
+rx = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)_picton_(?<picton>[0-9]+(?:\.[0-9]+)?)_kdrop_(?<kdrop>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
 T = table();
 for k = 1:numel(files)
     fname = files(k).name;
@@ -33,7 +33,10 @@ for k = 1:numel(files)
     M2       = str2double(tok.m2);
     PIC_t_ON_ms = str2double(tok.picton);
     TauCa_ms = str2double(tok.tauca);
-
+    kdrop = 0;
+    if isfield(tok,'kdrop')
+        kdrop = str2double(tok.kdrop);
+    end
     % Read table (writer uses exact headers I_nA, Rate_Hz)
     t = readtable(fpath, 'FileType','text', 'Delimiter','\t');
     % Be tolerant to header case/variants
@@ -55,6 +58,7 @@ for k = 1:numel(files)
     ti.Diam_um   = repmat(Diam_um, height(ti), 1);
     ti.TauCa_ms  = repmat(TauCa_ms, height(ti), 1);
     ti.PIC_t_ON_ms = repmat(PIC_t_ON_ms, height(ti), 1);
+    ti.KDrop     = repmat(kdrop, height(ti), 1);
     ti.File      = repmat(string(fname), height(ti), 1);
 
     T = [T; ti]; %#ok<AGROW>
@@ -79,14 +83,29 @@ title(tl, 'f–I curves by Diameter × \tau_{Ca}', 'FontName','Arial');
 % Consistent colors for M2 across tiles
 m2_all = unique(T.M2);
 pic_all = unique(T.PIC_t_ON_ms);
-cols = cm.umap(validatecolor("#EF3A47"),numel(m2_all)*numel(pic_all)+2);
-cols = cols(2:(end-1),:);
+kdrop_all = unique(T.KDrop);
+
+palette = validatecolor(["#E0E0E0"; "#EF3A47"; "#FDB515"],'multiple');
+cols = cell(numel(m2_all), numel(pic_all), numel(kdrop_all));
+for i = 1:numel(pic_all)
+    cdata = cm.umap(palette(i,:),numel(m2_all)*numel(kdrop_all)+5);
+    cdata = cdata(5:(end-1),:);
+    j = 0;
+    for m = 1:numel(m2_all)
+        for k = 1:numel(kdrop_all)
+            j = j + 1;
+            cols{i,m,k} = cdata(j,:);
+        end
+    end
+end
+
 tileTitles = strings(nP,1);                % store for reuse in traces figure
 i_nA_best = nan(nP,1);
 m2_best = nan(nP,1);
 tauca_best = nan(nP,1);
 diam_best = nan(nP,1);
 pic_t_on_best = nan(nP,1);
+kdrop_best = nan(nP,1);
 axs = gobjects(nP,1);
 for p = 1:nP
     d = pairs(p,1);  tau = pairs(p,2);
@@ -97,18 +116,24 @@ for p = 1:nP
 
     ax = nexttile(tl); axs(p) = ax;
     hold(ax,'on'); grid(ax,'on'); set(ax,'FontName','Arial');
-
+    c = 0;
     for i = 1:numel(m2_all)
         m2val = m2_all(i);
-        picval = pic_all(i);
-        Ti = Tp(Tp.M2==m2val & Tp.PIC_t_ON_ms==picval, :);
-        if isempty(Ti), continue; end
-        Ti = sortrows(Ti, 'I_nA');
-        pic_lab = tern(picval < 1000,sprintf("PIC_{ON} = %d ms",picval),"PIC_{OFF}");
-        plot(ax, Ti.I_nA, Ti.Rate_Hz, '-', ...
-            'DisplayName', sprintf('M2 = %.2f | %s', m2val, pic_lab), ...
-            'LineWidth', 1.5, ... 'MarkerSize', 5, ...
-            'Color', cols(i,:));
+        for k = 1:numel(pic_all)
+            picval = pic_all(k);
+            pic_lab = tern(picval < 1000,sprintf("PIC_{ON} = %d ms",picval),"PIC_{OFF}");
+            for j = 1:numel(kdrop_all)
+                kdropval = kdrop_all(j);
+                Ti = Tp(Tp.M2==m2val & Tp.PIC_t_ON_ms==picval & Tp.KDrop==kdropval, :);
+                if isempty(Ti), continue; end
+                Ti = sortrows(Ti, 'I_nA');
+                c = c + 1;
+                plot(ax, Ti.I_nA, Ti.Rate_Hz, '-', ...
+                    'DisplayName', sprintf('M2 = %.2f | %s (kdrop=%.1f)', m2val, pic_lab, kdropval), ...
+                    'LineWidth', 1.5, ... 'MarkerSize', 5, ...
+                    'Color', cols{k,i,j});
+            end
+        end
     end
 
     xlabel(ax,'Injected current (nA)','FontName','Arial');
@@ -124,8 +149,8 @@ for p = 1:nP
         ttl = sprintf('Diameter: %.0f \\mum, \\tau_{Ca}: %.0f ms', d, tau);
     end
     title(ax, ttl, 'FontName','Arial');
-    legend(ax,'Location','southeast','FontName','Arial','Box','off');
-
+    legend(ax,'Location','southeast','FontName','Arial','Box','off', ...
+        'FontSize',6,'NumColumns',ceil(numel(m2_all)*numel(kdrop_all)*numel(pic_all)/6));
     
     % pick the single point with maximum rate in this panel
     [~, localIdx] = max(Tp.Rate_Hz);
@@ -133,7 +158,8 @@ for p = 1:nP
     pic_lab = tern(pic_t_on_best(p) < 1000,sprintf("PIC_{ON} = %d ms",pic_t_on_best(p)),"PIC_{OFF}");
     m2_best(p) = Tp.M2(localIdx);
     m2_lab = sprintf("M2 = %.2f", m2_best(p));
-    tileTitles(p) = sprintf("%s [%s | %s]", string(ttl), m2_lab, pic_lab);
+    kdrop_best(p) = Tp.KDrop(localIdx);
+    tileTitles(p) = sprintf("%s [%s | %s (kdrop=%.1f)]", string(ttl), m2_lab, pic_lab, kdrop_best(p));
     i_nA_best(p) = Tp.I_nA(localIdx);
     diam_best(p) = Tp.Diam_um(localIdx);
     tauca_best(p) = Tp.TauCa_ms(localIdx);
@@ -160,9 +186,18 @@ for p = 1:nP
     I_s    = num2str_ifint(i_nA_best(p));
     tau_s = num2str_ifint(tauca_best(p));
     pic_t_on_s = num2str_ifint(pic_t_on_best(p));
-
-    pat_with_tau = sprintf('trace_diam_%s_m2_%s_tauca_%s_picton_%d_I_%s.tsv', diam_s, m2_s, tau_s, pic_t_on_s, I_s);
-    pat_glob     = pat_with_tau; % exact first
+    kdrop_s = num2str_ifint(kdrop_best(p));
+    pat_new = sprintf('trace_diam_%s_m2_%s_tauca_%s_picton_%s_kdrop_%s_I_%s.tsv', diam_s, m2_s, tau_s, pic_t_on_s, kdrop_s, I_s);
+    if kdrop_best(p) == 0
+        pat_old = sprintf('trace_diam_%s_m2_%s_tauca_%s_picton_%s_I_%s.tsv', diam_s, m2_s, tau_s, pic_t_on_s, I_s);
+        if exist(pat_new,'file')~=0
+            pat_glob     = pat_new; % exact first
+        else
+            pat_glob = pat_old;
+        end
+    else
+        pat_glob = pat_new;
+    end
     tr_files = dir(fullfile(outdir, pat_glob));
 
     if isempty(tr_files)

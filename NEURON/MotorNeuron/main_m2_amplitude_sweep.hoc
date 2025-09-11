@@ -69,6 +69,7 @@ if (!name_declared("outdir")) {
 } else if (strcmp(outdir, "") == 0) {
   outdir = "out_m2qa"
 }
+if (!name_declared("kdrop")) kdrop = 0 // Set to value between 0 and 1, to tie influence of PIC to ikrect as well
 
 // ---------- cell: single soma with your mechanism ----------
 create soma
@@ -78,6 +79,7 @@ soma {
   diam = 30 // um
   insert motoneuron_m2
 }
+soma.kdrop_motoneuron_m2 = kdrop 
 
 // ----- spike detector via NetCon -----
 spk_t = new Vector()
@@ -199,8 +201,8 @@ proc plot_last_trace_in_main() {
   g_main.size(0, tstop, Y0_v, Y1_v)
   vvec.line(g_main, tvec, 1, 1)
   // overlay_ca_on_trace(Y0_v, Y1_v)   // if you want the Ca overlay
-  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms  |  I=%g nA", \
-    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
+  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms (kdrop=%g)  |  I=%g nA", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2, stim.amp)
   g_main.label(.05, .92, g_trace_lab)
   // g_main.exec_menu("View = plot")
 }
@@ -210,8 +212,8 @@ proc plot_fi_in_main() {
   g_main.erase_all()
   g_main.view(50, 50, 1100, 420, 0, 0, 2*hi, 100)  // remap world box for f–I
   rates.line(g_main, amps, 1, 1)
-  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms", \
-    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
+  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms (kdrop=%g)", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2)
   g_main.label(.10, .92, g_fi_lab)
   // g_main.exec_menu("View = plot")
 }
@@ -252,8 +254,8 @@ proc plot_last_trace() { local n, t1
   // Overlay Ca (scaled into voltage axis) with right-side scale annotation
   // overlay_ca_on_trace(Y0_v, Y1_v)
   // in plot_last_trace()
-  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms  |  I=%g nA", \
-    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
+  sprint(g_trace_lab, "Time-Voltage:  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms (kdrop=%g)  |  I=%g nA", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2, stim.amp)
   g_trace.label(.1,.92, g_trace_lab)
   // g_trace.exec_menu("View = plot")
 }
@@ -431,8 +433,8 @@ proc plot_fi() {
   if (show_fi_plot==0) return
   rates.line(g_fi, amps, 1, 1)   // x = amps (nA), y = rates (Hz)
   // in plot_fi()
-  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms", \
-    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
+  sprint(g_fi_lab, "f–I (nA vs Hz):  M2=%g  |  Diameter=%g um  |  tau_ca=%g ms  |  pic_ton=%g ms (kdrop=%g)", \
+    soma.m2_modulation_motoneuron_m2, soma.diam, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2)
   g_fi.label(.1,.92, g_fi_lab)
   // g_fi.exec_menu("View = plot")
 }
@@ -463,6 +465,7 @@ proc write_header_meta() { local k
       }
       f_meta.printf("%g%s", pictons.x[k], s_join)
     }
+    f_meta.printf("PIC kdrop: %g\n", kdrop)
     f_meta.close()
 }
 
@@ -480,8 +483,8 @@ proc write_gatecurves() { local i, n, ok
     // iterate over the actually-filled length, not vgrid.size()
     n = minf.size()
     if (n == 0) return
-    sprint(fname_gate, "%s/gate_curves_diam_%g_m2_%g_tauca_%g_picton_%g.tsv", \
-      outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
+    sprint(fname_gate, "%s/gate_curves_diam_%g_m2_%g_tauca_%g_picton_%g_kdrop_%g.tsv", \
+      outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2)
     f_gate = new File()
     f_gate.wopen(fname_gate)
     f_gate.printf("V_mV\tm_inf\th_inf\tn_inf\tTau_m_ms\tTau_h_ms\tTau_n_ms\n")
@@ -497,8 +500,8 @@ proc write_gatecurves() { local i, n, ok
 proc write_last_trace() { local j, n
   f_trace = new File()
   // Include m2 value and current amplitude in the filename
-  sprint(fname_trace, "%s/trace_diam_%g_m2_%g_tauca_%g_picton_%g_I_%g.tsv", \
-    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, stim.amp)
+  sprint(fname_trace, "%s/trace_diam_%g_m2_%g_tauca_%g_picton_%g_kdrop_%g_I_%g.tsv", \
+    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2, stim.amp)
   f_trace.wopen(fname_trace)
   f_trace.printf("t_ms\tVsom_mV\tcai_mM\n")
   n = tvec.size()
@@ -510,8 +513,8 @@ proc write_last_trace() { local j, n
 
 proc write_fi() { local i, n 
   f_fi = new File()
-  sprint(fname_fi, "%s/fI_diam_%g_m2_%g_tauca_%g_picton_%g.tsv", \
-    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2)
+  sprint(fname_fi, "%s/fI_diam_%g_m2_%g_tauca_%g_picton_%g_kdrop_%g.tsv", \
+    outdir, soma.diam, soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2)
   f_fi.wopen(fname_fi)
   f_fi.printf("I_nA\tRate_Hz\n")
   n = amps.size()
