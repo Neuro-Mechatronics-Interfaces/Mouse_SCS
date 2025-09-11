@@ -9,7 +9,7 @@ function [fig, T] = plot_fi_curves(outdir)
 %   T   : concatenated table with I_nA, Rate_Hz, M2, Diam_um, TauCa_ms, File
 
 if nargin < 1
-    outdir = fullfile(pwd, "NEURON","MotorNeuron","out_m2qa");
+    outdir = fullfile(pwd, "NEURON","MotorNeuron","out_pbr");
 end
 
 files = [ ...
@@ -22,6 +22,8 @@ end
 
 % Regex (case-insensitive) for new names; tauca optional
 rx = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)_picton_(?<picton>[0-9]+(?:\.[0-9]+)?)_kdrop_(?<kdrop>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
+rx_old = '^[fF][iI]_diam_(?<diam>[0-9]+(?:\.[0-9]+)?)_m2_(?<m2>[0-9]+(?:\.[0-9]+)?)_tauca_(?<tauca>[0-9]+(?:\.[0-9]+)?)_picton_(?<picton>[0-9]+(?:\.[0-9]+)?)?\.tsv$';
+
 T = table();
 for k = 1:numel(files)
     fname = files(k).name;
@@ -29,6 +31,9 @@ for k = 1:numel(files)
 
     % Parse tokens
     tok = regexp(fname, rx, 'names');
+    if isempty(tok)
+        tok = regexp(fname, rx_old, 'names');
+    end
     Diam_um  = str2double(tok.diam);
     M2       = str2double(tok.m2);
     PIC_t_ON_ms = str2double(tok.picton);
@@ -89,7 +94,7 @@ palette = validatecolor(["#E0E0E0"; "#EF3A47"; "#FDB515"],'multiple');
 cols = cell(numel(m2_all), numel(pic_all), numel(kdrop_all));
 for i = 1:numel(pic_all)
     cdata = cm.umap(palette(i,:),numel(m2_all)*numel(kdrop_all)+5);
-    cdata = cdata(5:(end-1),:);
+    cdata = cdata(2:(end-3),:);
     j = 0;
     for m = 1:numel(m2_all)
         for k = 1:numel(kdrop_all)
@@ -128,7 +133,7 @@ for p = 1:nP
                 if isempty(Ti), continue; end
                 Ti = sortrows(Ti, 'I_nA');
                 c = c + 1;
-                plot(ax, Ti.I_nA, Ti.Rate_Hz, '-', ...
+                plot(ax, Ti.I_nA, Ti.Rate_Hz, tern(kdropval==0,':','-'), ...
                     'DisplayName', sprintf('M2 = %.2f | %s (kdrop=%.1f)', m2val, pic_lab, kdropval), ...
                     'LineWidth', 1.5, ... 'MarkerSize', 5, ...
                     'Color', cols{k,i,j});
@@ -149,9 +154,10 @@ for p = 1:nP
         ttl = sprintf('Diameter: %.0f \\mum, \\tau_{Ca}: %.0f ms', d, tau);
     end
     title(ax, ttl, 'FontName','Arial');
-    legend(ax,'Location','southeast','FontName','Arial','Box','off', ...
-        'FontSize',6,'NumColumns',ceil(numel(m2_all)*numel(kdrop_all)*numel(pic_all)/6));
-    
+    if p == 1
+        legend(ax,'Location','southeast','FontName','Arial','Box','off', ...
+            'FontSize',6,'NumColumns',1);
+    end
     % pick the single point with maximum rate in this panel
     [~, localIdx] = max(Tp.Rate_Hz);
     pic_t_on_best(p) = Tp.PIC_t_ON_ms(localIdx);

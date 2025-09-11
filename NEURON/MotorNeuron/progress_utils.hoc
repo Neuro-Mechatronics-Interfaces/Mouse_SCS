@@ -17,7 +17,7 @@ proc progress_tick() { local k, total, cur_elapsed
   k = $1        // 1-based index of current run
   total = $2   // total number of runs
   cur_elapsed = stopsw()
-  elapsed = elapsed + cur_elapsed
+  elapsed = elapsed + 3*cur_elapsed // this is not the most accurate thing we're talking about
   startsw()
   if (k>1) {
     per_iter = elapsed / k

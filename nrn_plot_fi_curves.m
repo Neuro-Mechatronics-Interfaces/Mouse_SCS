@@ -28,7 +28,7 @@ clc;
 %      strrep(pwd,'\','/'));
 % system(sprintf('C:\\Windows\\System32\\cmd.exe /k "%s"', terminal_cmd));
 
-simresults_folder = fullfile(pwd,"NEURON", "MotorNeuron","out_m2qa");
+simresults_folder = fullfile(pwd,"NEURON", "MotorNeuron","out_pbr");
 export_folder = "G:\Shared drives\NML_MetaWB_sandbox\Results\Simulations\PBR";
 
 [fig,T] = plot_fi_curves(simresults_folder);

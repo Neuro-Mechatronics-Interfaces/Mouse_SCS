@@ -15,22 +15,22 @@ dt     = 0.025 // ms
 tstop  = 1200 // ms
 v_init = -70 // mV
 lo = 0   // nA (rheobase search)
-current_step = 0.1 // nA
-hi = 12   // nA (rheobase search)
-runidx = 0 // (for tracking progress)
+current_step = 0.01 // nA
+hi = 8      // nA (rheobase search)
+runidx = 0  // (for tracking progress)
 total_runs = 0 // (initialize in run_all)
 
 // ---------- Window layout (pixels) ----------
 // trace (wide)
 TR_LEFT  = 150    
-TR_TOP  = 550    
-TR_W = 500  
-TR_H = 420  
+TR_TOP  = 250    
+TR_W = 600  
+TR_H = 300  
 // f–I (medium)
-FI_LEFT  = 1200  
-FI_TOP  = 550    
-FI_W = 520   
-FI_H = 420
+FI_LEFT  = 800  
+FI_TOP  = 250    
+FI_W = 350   
+FI_H = 350
 // steady-state (small)   
 SS_LEFT  = 150    
 SS_TOP  = 500   
@@ -65,9 +65,9 @@ if (!name_declared("show_fi_plot")) show_fi_plot = 0 // set to 1 for current inj
 if (!name_declared("show_trace_plot")) show_trace_plot = 0 // set to 1 for standard time membrane-voltage plot of soma
 if (!name_declared("show_geometry_cli")) show_geometry_cli = 0 // set to 1 to print the geometry for current simulation each update
 if (!name_declared("outdir")) {
-  outdir = "out_m2qa"
+  outdir = "out_pbr"
 } else if (strcmp(outdir, "") == 0) {
-  outdir = "out_m2qa"
+  outdir = "out_pbr"
 }
 if (!name_declared("kdrop")) kdrop = 0 // Set to value between 0 and 1, to tie influence of PIC to ikrect as well
 
@@ -87,25 +87,21 @@ nc_spike = new NetCon(&soma.v(0.5), nil)  // nil target is OK
 nc_spike.threshold = -10                  // mV
 nc_spike.record(spk_t)                    // spike times go into spk_t
 
-
 // ---------- sweep grid ----------
 m2vals = new Vector()
 m2vals.append(0)         
 m2vals.append(0.5)    
 
 diams = new Vector()
-diams.append(40)
 diams.append(20)
-diams.append(80)
+diams.append(40)
 
 taucas = new Vector()
 taucas.append(10)   
 taucas.append(20) 
-taucas.append(40)  
 
 pictons = new Vector()
 pictons.append(10000)   // 10000 ms ~ effectively "no PIC" with default
-pictons.append(850)     // PIC late in the clamp
 pictons.append(350)     // PIC early in the clamp
 
 // ---------- helpers ----------
