@@ -1,0 +1,223 @@
+// ==============================
+// epsp_rate_current_clamp_sweep.hoc
+// EPSP-driven firing-rate sweep with full metadata in out_epsp/
+// ==============================
+load_file("stdrun.hoc")
+// loads{ 
+//  proc: [progress_tick(), progress_init()]; 
+//  vars: [t0, elapsed, per_iter, eta]; 
+//  strdef: [bar, msg] }
+load_file("progress_utils.hoc") 
+
+// ---------- fixed sim controls ----------
+dt     = 0.025  // ms
+tstop  = 1000   // ms per condition
+v_init = -70    // mV
+
+// ---------- output dir ----------
+strdef outdir, s_cmd, path, fname
+outdir = "out_epsp"
+proc ensure_outdir() { sprint(s_cmd, "mkdir \"%s\"", outdir)  system(s_cmd) }
+ensure_outdir()
+
+// ---------- cell (fixed geometry & biophysics) ----------
+create soma
+access soma
+soma {
+  L = 20     // µm
+  diam = 20  // µm
+  nseg = 1
+  insert motoneuron_m2
+  m2_modulation_motoneuron_m2 = 0
+  tau_ca_motoneuron_m2        = 20
+  pic_ton_motoneuron_m2       = 10000 // set longer than recording so it never comes on
+  kdrop_motoneuron_m2         = 0
+}
+
+// ---------- EPSP synapse (AMPA-like) ----------
+objref syn
+soma syn = new Exp2Syn(0.5)
+syn.e    = 0
+syn.tau1 = 0.2   // ms
+syn.tau2 = 2.0   // ms
+
+// NetStim + RNG (Poisson)
+objref stim, r, nc
+stim = new NetStim()
+stim.start  = 100      // ms
+stim.number = 1e9
+stim.interval = 1000
+stim.noise  = 1
+r = new Random()
+r.MCellRan4(12345)   // one argument: base seed
+r.negexp(1)          // exponential inter-event intervals
+stim.noiseFromRandom(r)
+
+// Synaptic weight (uS)
+nc = new NetCon(stim, syn)
+nc.weight = 0.001  // 1 nS
+
+// Optional DC baseline (IClamp)
+objref ic
+soma ic = new IClamp(0.5)
+ic.del = 100
+ic.dur = 800
+ic.amp = 0      // nA
+
+// ---------- recording ----------
+objref tvec, vvec, spk_t, nc_spike, nil
+tvec = new Vector()
+tvec.record(&t)
+vvec = new Vector()
+vvec.record(&soma.v(0.5))
+spk_t = new Vector()
+nc_spike = new NetCon(&soma.v(0.5), nil)
+nc_spike.threshold = -10
+nc_spike.record(spk_t)
+
+// ---------- sweep axes ----------
+objref rate_levels, DC_levels, W_levels
+rate_levels = new Vector()
+rate_levels.append(5)   // Hz
+rate_levels.append(10)
+rate_levels.append(20)
+rate_levels.append(50)
+          
+DC_levels = new Vector()
+DC_levels.indgen(0.03, 0.05, 0.00005)
+
+W_levels = new Vector()
+W_levels.append(0.001)        // uS
+W_levels.append(0.002)
+
+// ---------- metadata writers ----------
+objref f
+
+proc write_fixed_params_json() {
+  f = new File()
+  sprint(path, "%s/fixed_params.json", outdir)
+  f.wopen(path)
+  f.printf("{\n")
+  f.printf("  \"sim\": {\"dt_ms\": %g, \"tstop_ms\": %g, \"v_init_mV\": %g},\n", dt, tstop, v_init)
+  f.printf("  \"geometry\": {\"soma_L_um\": %g, \"soma_diam_um\": %g, \"soma_nseg\": %d},\n", soma.L, soma.diam, soma.nseg)
+  f.printf("  \"biophysics\": {\"m2\": %g, \"tau_ca_ms\": %g, \"pic_t_on_ms\": %g, \"kdrop\": %g},\n", \
+            soma.m2_modulation_motoneuron_m2, soma.tau_ca_motoneuron_m2, soma.pic_ton_motoneuron_m2, soma.kdrop_motoneuron_m2)
+  f.printf("  \"synapse\": {\"type\": \"Exp2Syn\", \"e_mV\": %g, \"tau1_ms\": %g, \"tau2_ms\": %g},\n", syn.e, syn.tau1, syn.tau2)
+  f.printf("  \"netstim\": {\"start_ms\": %g, \"noise\": %g, \"rng\": \"MCellRan4-negexp\"}\n", stim.start, stim.noise)
+  f.printf("}\n")
+  f.close()
+}
+proc write_axes_metadata() { local i,n
+  // EPSP rate levels
+  f = new File()
+  sprint(path, "%s/epsp_rate_levels_Hz.dat", outdir)
+  f.wopen(path)
+  n = rate_levels.size()
+  for i=0, n-1 { f.printf("%g\n", rate_levels.x[i]) }
+  f.close()
+
+  // DC baseline levels
+  f = new File()
+  sprint(path, "%s/dc_levels_nA.dat", outdir)
+  f.wopen(path)
+  n = DC_levels.size()
+  if (n == 0) {
+    printf("WARN: DC_levels is empty; dc_levels_nA.dat will be empty.\n")
+  }
+  for i=0, n-1 { f.printf("%.2f\n", DC_levels.x[i]) }  // nice 2-dp output
+  f.close()
+
+  // synaptic weight levels
+  f = new File()
+  sprint(path, "%s/weight_levels_uS.dat", outdir)
+  f.wopen(path)
+  n = W_levels.size()
+  for i=0, n-1 { f.printf("%g\n", W_levels.x[i]) }
+  f.close()
+
+  // RNG seed log
+  f = new File()
+  sprint(path, "%s/rng_info.tsv", outdir)
+  f.wopen(path)
+  f.printf("field\tvalue\n")
+  f.printf("base_seed\t%d\n", 12345)
+  f.printf("substream\tseed_base + cond_index\n")
+  f.close()
+}
+
+// per-condition TSV row writer
+objref flog
+proc open_log() {
+  flog = new File()
+  sprint(path, "%s/results.tsv", outdir)
+  flog.wopen(path)
+  flog.printf("rate_Hz\tDC_nA\tweight_uS\tseed\tspike_count\tduration_ms\tfiring_rate_Hz\n")
+}
+
+proc append_log_row() { local sc, fr, rate, dc, w, seed
+  // $1=rate_Hz, $2=seed_used
+  rate = $1
+  seed = $2
+  dc   = ic.amp        // <-- log what was actually applied
+  w    = nc.weight
+  sc = spk_t.size()
+  fr = sc / (tstop/1000)
+  flog.printf("%g\t%g\t%g\t%d\t%d\t%g\t%g\n", rate, dc, w, seed, sc, tstop, fr)
+}
+
+proc close_log() { if (object_id(flog)) flog.close() }
+
+proc save_last_trace() { local i,n,rate,dc,w
+  rate = $1  dc = $2  w = $3
+  sprint(fname, "%s/trace_rate_%gHz_DC_%g_nA_w_%g_uS.tsv", outdir, rate, dc, w)
+  f = new File()  f.wopen(fname)
+  f.printf("t_ms\tV_mV\n")
+  n = tvec.size()
+  for i=0, n-1 { f.printf("%g\t%g\n", tvec.x[i], vvec.x[i]) }
+  f.close()
+}
+
+
+// ---------- run the sweep ----------
+proc run_all() { local i,j,k, cond, seed, total_runs, run_idx
+  printf("sizes: rate=%d, DC=%d, W=%d\n", rate_levels.size(), DC_levels.size(), W_levels.size())
+  write_fixed_params_json()
+  write_axes_metadata()
+  open_log()
+  total_runs = rate_levels.size() * DC_levels.size() * W_levels.size()
+  progress_init(total_runs)
+  runidx = 0
+  cond = 0
+  for k = 0, W_levels.size()-1 {
+    nc.weight = W_levels.x[k]
+    for j = 0, DC_levels.size()-1 {
+      ic.amp = DC_levels.x[j]
+      for i = 0, rate_levels.size()-1 {
+        cond = cond + 1
+        if (rate_levels.x[i] > 0) {
+          stim.interval = 1000.0 / rate_levels.x[i]
+        } else {
+          stim.interval = 1e9
+        }
+        // deterministic new substream per condition
+        seed = 12345 + cond
+        r.MCellRan4(1, seed)
+
+        // run
+        tvec.resize(0)  vvec.resize(0)  spk_t.resize(0)
+        finitialize(v_init)
+        continuerun(tstop)
+
+        append_log_row(rate_levels.x[i], seed)
+        save_last_trace(rate_levels.x[i], DC_levels.x[j], nc.weight)
+        runidx = runidx + 1
+        progress_tick(runidx, total_runs)   
+      }
+    }
+  }
+  close_log()
+  printf("Done. Files in %s\n", outdir)
+}
+
+run_all()
+quit()

@@ -137,3 +137,9 @@ cd NEURON/MotorNeuron
 call C:/nrn/bin/nrniv.exe -c "show_trace_plot=1" -c "show_fi_plot=1" -c "kdrop=0.5" main_m2_amplitude_sweep.hoc
 ```
 Alternatively, launch `nrn_plot_fi_curves` script from MATLAB and/or follow instructions in comments.  
+
+### NEURON EPSP I Sweep ###
+To launch the EPSP-Rate + current-clamp sweep and associated voltage clamp/time-voltage-concentration recordings, run:
+```bat
+call NEURON\nrniv.bat C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron C:/MyRepos/NML/Mouse_SCS/NEURON/MotorNeuron/epsp_rate_current_clamp_sweep.hoc out_epsp C:/nrn/bin
+```

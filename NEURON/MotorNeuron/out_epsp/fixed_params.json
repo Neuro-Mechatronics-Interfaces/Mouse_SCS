@@ -1,0 +1,7 @@
+{
+  "sim": {"dt_ms": 0.025, "tstop_ms": 1000, "v_init_mV": -70},
+  "geometry": {"soma_L_um": 20, "soma_diam_um": 20, "soma_nseg": 1},
+  "biophysics": {"m2": 0, "tau_ca_ms": 20, "pic_t_on_ms": 10000, "kdrop": 0},
+  "synapse": {"type": "Exp2Syn", "e_mV": 0, "tau1_ms": 0.2, "tau2_ms": 2},
+  "netstim": {"start_ms": 100, "noise": 1, "rng": "MCellRan4-negexp"}
+}

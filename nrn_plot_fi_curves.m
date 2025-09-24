@@ -41,3 +41,8 @@ utils.save_figure(fig(2),export_folder, ...
 writetable(T, fullfile(export_folder,"FI_Sweep_Data.csv"));
 
 utils.print_windows_folder_link(export_folder,"Saved figures and table here.");
+
+%%
+fig = plot_covisi_tiled(T); 
+
+%%
