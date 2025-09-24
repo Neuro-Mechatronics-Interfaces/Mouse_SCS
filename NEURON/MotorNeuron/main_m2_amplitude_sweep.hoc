@@ -544,19 +544,19 @@ proc run_all() { local i, j, k, p, nD, nM, nT, nP
   nP = pictons.size()
 
   for j = 0, nD-1 {
-    set_soma_geom(diams.x[j])
+    set_soma_geom(diams.x[j]) // <-- set size of cell
     for k = 0, nT-1 {
-      soma.tau_ca_motoneuron_m2 = taucas.x[k]
+      soma.tau_ca_motoneuron_m2 = taucas.x[k] // <-- set calcium clearance time-constant
       for p = 0, nP-1 {
         soma.pic_ton_motoneuron_m2 = pictons.x[p]    // <-- set PIC onset
         for i = 0, nM-1 {
-          soma.m2_modulation_motoneuron_m2 = m2vals.x[i]
+          soma.m2_modulation_motoneuron_m2 = m2vals.x[i] // <-- set M2 agonist level
           run_simulation()
         }
       }
     }
   }
-  printf("Done. Files in out_m2qa/ (names include diameter, tau_ca, and pic_ton).\n")
+  printf("Done. Files in %s.\n", outdir)
 }
 
 // ---------- entry point ----------

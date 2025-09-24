@@ -1,7 +1,7 @@
 function simdata = load_simulated_data(options)
 %LOAD_SIMULATED_DATA  Discover W1/W2/W3 from weights.tsv and load all data.
 arguments
-    options.APThreshold (1,1) double = -10; % mV
+    options.APThreshold (1,1) double = 10; % mV
     options.SimulationOutputFolder = fullfile(pwd,"NEURON/MotorNeuron/out_leak")
     options.FrequenciesFile = "frequencies.dat"
     options.M2LevelsFile = "m2_levels.dat"

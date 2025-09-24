@@ -18,14 +18,14 @@ soma {
 
 ais {
   L = 30      // ~20–40 µm common
-  diam = 1.2  // ~0.8–1.5 µm
+  diam = 1.5  // ~0.8–1.5 µm
   nseg = 3
   insert initial        
 }
 
 axon {
   L = 1000
-  diam = 2
+  diam = 0.8
   nseg = 101
   insert axnode
 }
@@ -51,9 +51,9 @@ connect dend[2](1), soma(0)
 // ----- Synapses & Stims -----
 objref syn0, syn1, syn2, stim0, stim1, stim2
 
-dend[0] { syn0 = new Exp2Syn(0.5)  syn0.e =  80 }  // EPSP
-dend[1] { syn1 = new Exp2Syn(0.5)  syn1.e =  80 }  // EPSP
-dend[2] { syn2 = new Exp2Syn(0.5)  syn2.e =  80 }  // EPSP
+dend[0] { syn0 = new Exp2Syn(0.5)  syn0.e =  0 }  // EPSP
+dend[1] { syn1 = new Exp2Syn(0.5)  syn1.e =  0 }  // EPSP
+dend[2] { syn2 = new Exp2Syn(0.5)  syn2.e =  0 }  // EPSP
 
 stim0 = new NetStim()
 stim1 = new NetStim()
@@ -83,7 +83,7 @@ vvec.record(&axon.v(0.5))
 
 // ----- Sweep controls -----
 freq = 10
-leak_cur = 0.0
+diam_cur = 20.0
 w0 = 1  
 w1 = 1  
 w2 = 1
@@ -93,10 +93,8 @@ dt = 0.025
 
 // Run once per condition
 proc run_simulation() {
-    soma.gl_motoneuron = leak_cur
-    dend[0].gl_motoneuron = leak_cur
-    dend[1].gl_motoneuron = leak_cur
-    dend[2].gl_motoneuron = leak_cur
+    // Apply current diameter to soma; leave dendrites unchanged
+    soma.diam = diam_cur
 
     // Stims by phase
     stim0.interval = 9000 / freq
@@ -133,83 +131,106 @@ proc run_simulation() {
 }
 
 // ----- Sweeps (unchanged except for mechanism names above) -----
-objref blend_levels, m2_levels, leak_levels, frequencies, w0_levels, w1_levels, w2_levels
-leak_levels = new Vector()
-leak_levels.append(0.0005)
-leak_levels.append(0.005)
+objref blend_levels, m2_levels, diam_levels, frequencies, w0_levels, w1_levels, w2_levels
+
+diam_levels = new Vector()
+diam_levels.append(5)
+diam_levels.append(10)
+diam_levels.append(15)
+diam_levels.append(20)
 
 m2_levels = new Vector()
 m2_levels.append(1.0)
 
 blend_levels = new Vector()
 blend_levels.append(0.0)
-blend_levels.append(0.5)
 
 frequencies = new Vector()
 frequencies.append(3)
 frequencies.append(30)
+frequencies.append(90)
 frequencies.append(300)
-frequencies.append(3000)
 
 // Pulse sequencing weights
 w0_levels = new Vector()  
 w1_levels = new Vector()  
 w2_levels = new Vector()
 // Constant
-w0_levels.append(30)  
-w1_levels.append(30)  
-w2_levels.append(30)  
+w0_levels.append(0.01)  
+w1_levels.append(0.01)  
+w2_levels.append(0.01)  
 
 // ---- Synaptic polarity presets (sequence modes) ----
-// mode 0: EPSP only           (80,  80,  80)
-// mode 1: IPSP,IPSP,EPSP     (-80, -80,  80)   
-// mode 2: IPSP only          (-80, -80, -80)
-// mode 3: Mixed A            (-80,  80,  80)   // example
-// mode 4: Mixed B            ( 80, -80,  80)   // example
-
 objref seq_modes
 seq_modes = new Vector()
 seq_modes.append(0)
-seq_modes.append(1)
-seq_modes.append(3)
+
+proc set_syn_AMPA() { // $o1 = Exp2Syn*
+    $o1.e    = 0      // ~AMPA reversal (Na+/K+ mix)
+    $o1.tau1 = 0.2    // ms (rise)
+    $o1.tau2 = 2.0    // ms (decay)
+}
+
+proc set_syn_GABAA() { // $o1 = Exp2Syn*
+    $o1.e    = -70    // ≈ E_Cl in adult neurons
+    $o1.tau1 = 0.5    // ms (rise)
+    $o1.tau2 = 8.0    // ms (decay)
+}
 
 strdef seqname, seqabbr
 proc set_seq_mode() { local mode
   mode = $1
-  if (mode==0) {
-    syn0.e =  80  
-    syn1.e =  80  
-    syn2.e =  80
+
+  if (mode==0) {        // E E E
+    set_syn_AMPA(syn0)
+    set_syn_AMPA(syn1)
+    set_syn_AMPA(syn2)
     sprint(seqname, "EPSP_only")
     sprint(seqabbr, "E3")
-  } else if (mode==1) {
-    syn0.e = -80  
-    syn1.e = -80  
-    syn2.e =  80
+
+  } else if (mode==1) { // I I E
+    set_syn_GABAA(syn0)
+    set_syn_GABAA(syn1)
+    set_syn_AMPA(syn2)
     sprint(seqname, "IPSP_IPSP_EPSP")
     sprint(seqabbr, "IIE")
-  } else if (mode==2) {
-    syn0.e = -80  
-    syn1.e = -80  
-    syn2.e = -80
+
+  } else if (mode==2) { // I I I
+    set_syn_GABAA(syn0)
+    set_syn_GABAA(syn1)
+    set_syn_GABAA(syn2)
     sprint(seqname, "IPSP_only")
     sprint(seqabbr, "I3")
-  } else if (mode==3) {
-    syn0.e = -80  
-    syn1.e =  80  
-    syn2.e = -80
+
+  } else if (mode==3) { // I E I
+    set_syn_GABAA(syn0)
+    set_syn_AMPA(syn1)
+    set_syn_GABAA(syn2)
     sprint(seqname, "IPSP_EPSP_IPSP")
     sprint(seqabbr, "IEI")
-  } else if (mode==4) {
-    syn0.e =  80  
-    syn1.e = -80  
-    syn2.e =  80
+
+  } else if (mode==4) { // E I E
+    set_syn_AMPA(syn0)
+    set_syn_GABAA(syn1)
+    set_syn_AMPA(syn2)
     sprint(seqname, "EPSP_IPSP_EPSP")
     sprint(seqabbr, "EIE")
+
   } else {
-    // Fallback: leave as-is
     sprint(seqname, "custom")
     sprint(seqabbr, "CUST")
+  }
+}
+
+// ----- Helpers for metadata labeling -----
+strdef _syn_type
+proc syn_type_from_e() { local e
+  // Sets global _syn_type to "EPSP" if e >= -10 mV, else "IPSP"
+  e = $1
+  if (e >= -10) {
+    sprint(_syn_type, "EPSP")
+  } else {
+    sprint(_syn_type, "IPSP")
   }
 }
 
@@ -225,25 +246,93 @@ p0_levels.append(1.0)
 p1_levels.append(1.0)   
 p2_levels.append(1.0)   // equal
 
-// ---- Metadata writers ----
-objref frout, m2out, leakout, blendout, seqout, pout, wout
+// ---- Biophysics snapshot (JSON) ----
+objref biojson
+proc write_biophysics_json() {
+  biojson = new File()
+  biojson.wopen("out_leak/biophysics.json")
+  // NOTE: units are micrometers for L, diam
+  biojson.printf("{\"units\":{\"L\":\"um\",\"diam\":\"um\"},")
+  biojson.printf("\"sections\":{")
 
-proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
-  frout = new File()   frout.wopen("out_leak/frequencies.dat")   frequencies.printf(frout, "%g\n")   frout.close()
-  m2out = new File()   m2out.wopen("out_leak/m2_levels.dat")     m2_levels.printf(m2out, "%g\n")     m2out.close()
-  leakout = new File() leakout.wopen("out_leak/leak_levels.dat") leak_levels.printf(leakout, "%g\n") leakout.close()
-  blendout = new File() blendout.wopen("out_leak/blending_levels.dat") blend_levels.printf(blendout, "%g\n") blendout.close()
+  // soma
+  biojson.printf("\"soma\":{\"L\":%g,\"nseg\":%d,\"mechs\":[\"motoneuron\"]},", soma.L, soma.nseg)
 
-  // sequence modes table
-  seqout = new File()  seqout.wopen("out_leak/syn_sequence_modes.tsv")
-  seqout.printf("mode\tname\tsyn0.e\tsyn1.e\tsyn2.e\n")
-  for i=0, seq_modes.size()-1 {
-    set_seq_mode(seq_modes.x[i])
-    seqout.printf("%d\t%s\t%g\t%g\t%g\n", seq_modes.x[i], seqname, syn0.e, syn1.e, syn2.e)
+  // ais
+  biojson.printf("\"ais\":{\"L\":%g,\"diam\":%g,\"nseg\":%d,\"mechs\":[\"initial\"]},", ais.L, ais.diam, ais.nseg)
+
+  // axon
+  biojson.printf("\"axon\":{\"L\":%g,\"diam\":%g,\"nseg\":%d,\"mechs\":[\"axnode\"]},", axon.L, axon.diam, axon.nseg)
+
+  // dend array
+  biojson.printf("\"dend\":[")
+  strdef comma
+  for i=0,2 {
+    if (i < 2) { sprint(comma, ",") } else { sprint(comma, "") }
+    biojson.printf("{\"index\":%d,\"L\":%g,\"diam\":%g,\"nseg\":%d,\"mechs\":[\"motoneuron\"]}%s", i, dend[i].L, dend[i].diam, dend[i].nseg, comma)
+  }
+  biojson.printf("]")  // end dend
+  biojson.printf("}}\n") // end sections + root
+  biojson.close()
+}
+
+
+// ----- Metadata writers (REPLACE your existing save_metadata with this) -----
+objref frout, m2out, diamout, blendout, seqout, pout, wout, synjson
+
+proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n, sm
+  // Scalars / vectors you already have
+  frout   = new File()  frout.wopen("out_leak/frequencies.dat")         frequencies.printf(frout, "%g\n")        frout.close()
+  m2out   = new File()  m2out.wopen("out_leak/m2_levels.dat")           m2_levels.printf(m2out, "%g\n")          m2out.close()
+  diamout = new File()  diamout.wopen("out_leak/diam_levels.dat")       diam_levels.printf(diamout, "%g\n")      diamout.close()
+  blendout= new File()  blendout.wopen("out_leak/blending_levels.dat")  blend_levels.printf(blendout, "%g\n")    blendout.close()
+
+  // ---- Expanded sequence modes table with e, tau1, tau2, and EPSP/IPSP label ----
+  seqout = new File()
+  seqout.wopen("out_leak/syn_sequence_modes.tsv")
+  seqout.printf("mode\tname\tabbr\tsyn0.type\tsyn0.e\tsyn0.tau1\tsyn0.tau2\tsyn1.type\tsyn1.e\tsyn1.tau1\tsyn1.tau2\tsyn2.type\tsyn2.e\tsyn2.tau1\tsyn2.tau2\n")
+
+  strdef st0, st1, st2
+  for sm = 0, seq_modes.size()-1 {
+    set_seq_mode(seq_modes.x[sm])  // sets syn params + seqname/abbr
+
+    syn_type_from_e(syn0.e)  sprint(st0, "%s", _syn_type)
+    syn_type_from_e(syn1.e)  sprint(st1, "%s", _syn_type)
+    syn_type_from_e(syn2.e)  sprint(st2, "%s", _syn_type)
+
+    seqout.printf("%d\t%s\t%s\t%s\t%g\t%g\t%g\t%s\t%g\t%g\t%g\t%s\t%g\t%g\t%g\n", \
+      seq_modes.x[sm], seqname, seqabbr, \
+      st0, syn0.e, syn0.tau1, syn0.tau2, \
+      st1, syn1.e, syn1.tau1, syn1.tau2, \
+      st2, syn2.e, syn2.tau1, syn2.tau2)
   }
   seqout.close()
 
-  // pulse intensity triplets
+  // ---- Machine-friendly JSON snapshot of synapse params by mode ----
+  synjson = new File()
+  synjson.wopen("out_leak/synapse_params_by_mode.json")
+  synjson.printf("[\n")
+  strdef comma
+  for sm = 0, seq_modes.size()-1 {
+    set_seq_mode(seq_modes.x[sm])
+
+    syn_type_from_e(syn0.e)  sprint(st0, "%s", _syn_type)
+    syn_type_from_e(syn1.e)  sprint(st1, "%s", _syn_type)
+    syn_type_from_e(syn2.e)  sprint(st2, "%s", _syn_type)
+
+    if (sm < seq_modes.size()-1) { sprint(comma, ",") } else { sprint(comma, "") }
+
+    synjson.printf("  {\"mode\":%d,\"name\":\"%s\",\"abbr\":\"%s\",\"syn0\":{\"type\":\"%s\",\"e\":%g,\"tau1\":%g,\"tau2\":%g},\"syn1\":{\"type\":\"%s\",\"e\":%g,\"tau1\":%g,\"tau2\":%g},\"syn2\":{\"type\":\"%s\",\"e\":%g,\"tau1\":%g,\"tau2\":%g}}%s\n", \
+                   seq_modes.x[sm], seqname, seqabbr, \
+                   st0, syn0.e, syn0.tau1, syn0.tau2, \
+                   st1, syn1.e, syn1.tau1, syn1.tau2, \
+                   st2, syn2.e, syn2.tau1, syn2.tau2, \
+                   comma)
+  }
+  synjson.printf("]\n")
+  synjson.close()
+
+  // ---- Pulse intensity triplets (unchanged) ----
   pout = new File()  pout.wopen("out_leak/pulse_intensities.tsv")
   pout.printf("row\tp0\tp1\tp2\n")
   pi_n0 = p0_levels.size()
@@ -257,22 +346,23 @@ proc save_metadata() { local i, pi_n0, pi_n1, pi_n2, pi_n
   }
   pout.close()
 
-  // ---- Write weights metadata ----
-  // One row per "pattern" index c; aligns with w0_levels/w1_levels/w2_levels
+  // ---- Weights metadata (unchanged) ----
   wout = new File()
   wout.wopen("out_leak/weights.tsv")
   wout.printf("row\tW1\tW2\tW3\n")
-  for c = 0, w2_levels.size()-1 {
-    wout.printf("%d\t%g\t%g\t%g\n", c, w0_levels.x[c], w1_levels.x[c], w2_levels.x[c])
+  for i = 0, w2_levels.size()-1 {
+    wout.printf("%d\t%g\t%g\t%g\n", i, w0_levels.x[i], w1_levels.x[i], w2_levels.x[i])
   }
   wout.close()
+  
+  write_biophysics_json()
 }
 
 func nconds() { local n
   n = seq_modes.size() \
     * p0_levels.size() \
     * w2_levels.size() \
-    * leak_levels.size() \
+    * diam_levels.size() \
     * m2_levels.size() \
     * frequencies.size() \
     * blend_levels.size()
@@ -298,8 +388,8 @@ proc run_all_conditions() { local runidx, total, total_runs
       p0 = p0_levels.x[pi]  p1 = p1_levels.x[pi]  p2 = p2_levels.x[pi]
 
       for c = 0, w2_levels.size()-1 {
-        for l = 0, leak_levels.size()-1 {
-          leak_cur = leak_levels.x[l]
+        for l = 0, diam_levels.size()-1 {
+          diam_cur = diam_levels.x[l]
           for k = 0, m2_levels.size()-1 {
             m2_cur = m2_levels.x[k]
             for i = 0, frequencies.size()-1 {
@@ -318,9 +408,9 @@ proc run_all_conditions() { local runidx, total, total_runs
                 // Save traces — include seq and p-triplet tags
                 strdef filename_voltage, filename_time
                 sprint(filename_voltage, "out_leak/voltage_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat", \
-                                      seqabbr, p0, p1, p2, w0, w1, w2, leak_cur, m2_cur, blending, freq)
+                                      seqabbr, p0, p1, p2, w0, w1, w2, diam_cur, m2_cur, blending, freq)
                 sprint(filename_time,    "out_leak/time_%s_p%.2f_%.2f_%.2f_%g_%g_%g_%ggl_%gm2_%gblend_%dHz.dat",    \
-                                      seqabbr, p0, p1, p2, w0, w1, w2, leak_cur, m2_cur, blending, freq)
+                                      seqabbr, p0, p1, p2, w0, w1, w2, diam_cur, m2_cur, blending, freq)
 
                 vout = new File()  vout.wopen(filename_voltage)  vvec.printf(vout, "%g\n")  vout.close()
                 tout = new File()  tout.wopen(filename_time)     tvec.printf(tout, "%g\n")  tout.close()

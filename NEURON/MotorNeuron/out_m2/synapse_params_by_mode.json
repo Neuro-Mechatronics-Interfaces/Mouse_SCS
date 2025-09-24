@@ -1,0 +1,5 @@
+[
+  {"mode":0,"name":"EPSP_only","abbr":"E3","syn0":{"type":"EPSP","e":0,"tau1":0.2,"tau2":2},"syn1":{"type":"EPSP","e":0,"tau1":0.2,"tau2":2},"syn2":{"type":"EPSP","e":0,"tau1":0.2,"tau2":2}},
+  {"mode":1,"name":"IPSP_IPSP_EPSP","abbr":"IIE","syn0":{"type":"IPSP","e":-70,"tau1":0.5,"tau2":8},"syn1":{"type":"IPSP","e":-70,"tau1":0.5,"tau2":8},"syn2":{"type":"EPSP","e":0,"tau1":0.2,"tau2":2}},
+  {"mode":3,"name":"IPSP_EPSP_IPSP","abbr":"IEI","syn0":{"type":"IPSP","e":-70,"tau1":0.5,"tau2":8},"syn1":{"type":"EPSP","e":0,"tau1":0.2,"tau2":2},"syn2":{"type":"IPSP","e":-70,"tau1":0.5,"tau2":8}}
+]

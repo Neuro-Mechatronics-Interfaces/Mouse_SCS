@@ -2,13 +2,14 @@ function [sweep_data, simdata] = load_plot_export_simulations(SimulationName, op
 
 arguments
     SimulationName {mustBeMember(SimulationName,["m2","leak"])} = "leak";
-    options.APThreshold (1,1) double = -10; % mV
+    options.APThreshold (1,1) double = 10; % mV
     options.CloseExisting (1,1) logical = true;
     options.ClearCommandWindow (1,1) logical = true;
     options.SaveFolder {mustBeTextScalar} = 'export/NEURON';
     options.DeckName {mustBeTextScalar} = '%s-Modulation';
     options.SimulationOutputFolder = fullfile(pwd,"NEURON/MotorNeuron/out_%s");
 end
+warning('off','MATLAB:table:ModifiedAndSavedVarnames');
 if contains(string(options.SimulationOutputFolder),"_%s")
     options.SimulationOutputFolder = sprintf(strrep(options.SimulationOutputFolder,"\","/"),SimulationName);
 end
@@ -49,7 +50,7 @@ for s = 1:numel(uSeq)
     % choose synapse marker styles once per sequence (for per-trace tiles)
     pulseTypeAuto = seqabbr_to_pulsetype(thisSeq);
 
-    % Plot tiles per (M2, Leak, SweepName) group and compute rates
+    % Plot tiles per (M2, Diam, SweepName) group and compute rates
     [fig, tmp] = plot_simulations(sd, 'PulseType', pulseTypeAuto);
     % keep sequence tag in aggregate table for overlay plot
     if ~ismember('SeqAbbr', tmp.Properties.VariableNames)
@@ -90,8 +91,8 @@ for s = 1:numel(uSeq)
 
         % Save to disk; use the *actual* sweep name from UserData (set in plot_simulations)
         ud = fig(iFig).UserData;
-        fn = sprintf("Recruitment_Vsoma_%s_%ggl_%gm2_%gblending", ...
-            string(ud.SweepName), ud.Leak, ud.M2_Level, ud.Blending_Level);
+        fn = sprintf("Recruitment_Vsoma_%s_%gum_%gm2_%gblending", ...
+            string(ud.SweepName), ud.Diam, ud.M2_Level, ud.Blending_Level);
         utils.save_figure(fig(iFig), sprintf('%s/%s',options.SaveFolder,deck_name), fn, ...
             'ExportAs',{'.png','.svg'}, 'SaveFigure', true);
     end
@@ -113,6 +114,7 @@ utils.save_figure(fig, options.SaveFolder, 'All_Pre-vs-Post_Synaptic_Frequency_C
 % 4) Save deck
 pptx.save(fullfile(options.SaveFolder, deck_name));
 warning('on','signal:findpeaks:largeMinPeakHeight');
+warning('on','MATLAB:table:ModifiedAndSavedVarnames');
 end
 
 function pulseType = seqabbr_to_pulsetype(seqabbr)
